@@ -44,6 +44,7 @@ class AppsActivity : BaseActivity() {
         list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) options(shown[pos]); true }
         Ui.trackHighlight(list)
+        Anim.cascade(list)
         all = Apps.all(this)
         filter()
     }

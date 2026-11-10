@@ -3,6 +3,7 @@ package com.plaintextlab.dumblauncher
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.widget.AbsListView
 import android.widget.AdapterView
@@ -35,12 +36,16 @@ object Ui {
     fun paint(v: View, selected: Boolean, animate: Boolean = false) {
         v.findViewById<View>(R.id.icon)?.let { icon ->
             val s = if (selected && Prefs.getBool(v.context, Prefs.ZOOM, true)) ZOOM else 1f
-            icon.animate().cancel()
-            if (animate) icon.animate().scaleX(s).scaleY(s).setDuration(140).start()
-            else { icon.scaleX = s; icon.scaleY = s }
+            Anim.zoom(icon, s, animate)
         }
         val colour = Prefs.getInt(v.context, Prefs.HIGHLIGHT, COLOURS[0].second)
-        v.setBackgroundColor(if (selected) colour else Color.TRANSPARENT)
+        if (selected) {
+            val bg = ColorDrawable(colour)
+            v.background = bg
+            if (animate) Anim.fadeIn(bg, v.context)
+        } else {
+            v.background = null
+        }
         val text = if (selected) readableOn(colour) else v.context.getColor(R.color.fg)
         v.findViewById<TextView>(R.id.label)?.setTextColor(text)
         v.findViewById<TextView>(R.id.value)?.setTextColor(

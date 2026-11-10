@@ -27,6 +27,7 @@ The selected icon zooms in, Nokia style.
 | Hide notification bar | On / Off (swipe down to peek) |
 | Show missed calls & messages | On / Off |
 | Highlight colour | 10 colours |
+| Animations | On / Off (screen transitions, menu pop-in, list cascade, highlight fade) |
 | Zoom selected icon | On / Off |
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None |
 | Icon style (no pack) | Clean (no white box) / Original |

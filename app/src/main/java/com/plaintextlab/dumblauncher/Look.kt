@@ -3,7 +3,9 @@ package com.plaintextlab.dumblauncher
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -46,6 +48,24 @@ object Look {
 /** Every launcher screen applies the look settings when it comes to the front. */
 abstract class BaseActivity : Activity() {
     open val isHome = false
+
+    /** The Menu zooms open (S60 style); other screens slide in from the right. */
+    open val zooms = false
+
+    @Suppress("DEPRECATION") // overrideActivityTransition is API 34+; this works on all versions
+    override fun startActivity(intent: Intent?, options: Bundle?) {
+        super.startActivity(intent, options)
+        val target = intent?.component ?: return
+        if (target.packageName != packageName || !Anim.on(this)) return
+        val enter = if (target.className == MenuActivity::class.java.name) R.anim.zoom_in else R.anim.slide_in
+        overridePendingTransition(enter, R.anim.hold)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun finish() {
+        super.finish()
+        if (Anim.on(this)) overridePendingTransition(R.anim.hold, if (zooms) R.anim.zoom_out else R.anim.slide_out)
+    }
 
     override fun onResume() {
         super.onResume()

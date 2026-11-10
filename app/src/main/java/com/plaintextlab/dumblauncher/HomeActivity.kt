@@ -30,6 +30,7 @@ class HomeActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         refreshStatus()
+        Anim.homeArrive(findViewById(R.id.clockBox), status)
     }
 
     override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) =

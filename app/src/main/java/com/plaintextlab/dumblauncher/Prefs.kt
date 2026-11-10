@@ -17,6 +17,7 @@ object Prefs {
     const val HIDE_STATUS = "hide_status"
     const val SHOW_COUNTS = "show_counts"
     const val ZOOM = "zoom"
+    const val ANIM = "anim"
 
     fun iconOverride(target: String) = "icon:$target"
 

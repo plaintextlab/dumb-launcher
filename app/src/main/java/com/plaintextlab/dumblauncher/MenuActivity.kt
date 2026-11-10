@@ -13,6 +13,8 @@ import android.widget.TextView
 /** 3×3 grid. Keys 1-9 open the matching cell directly. */
 class MenuActivity : BaseActivity() {
 
+    override val zooms = true
+
     private lateinit var grid: GridView
     private var slots: List<AppEntry?> = emptyList()
 
@@ -25,6 +27,7 @@ class MenuActivity : BaseActivity() {
         grid.setOnItemClickListener { _, _, pos, _ -> open(pos) }
         grid.setOnItemLongClickListener { _, _, pos, _ -> options(pos); true }
         Ui.trackHighlight(grid)
+        Anim.cascade(grid)
     }
 
     override fun onResume() {

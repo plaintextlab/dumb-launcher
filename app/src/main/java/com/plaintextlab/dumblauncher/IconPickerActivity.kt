@@ -40,6 +40,7 @@ class IconPickerActivity : BaseActivity() {
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
         Ui.trackHighlight(grid) { updateTitle() }
+        Anim.cascade(grid)
         pack = IconPacks.get(this, intent.getStringExtra("pack"))
         all = pack?.names.orEmpty().map { it to T9.encode(it.lowercase().replace('_', ' ')) }
         filter()

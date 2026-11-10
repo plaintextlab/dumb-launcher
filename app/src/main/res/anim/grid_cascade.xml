@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cells pop in one after another, top-left to bottom-right. -->
+<gridLayoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animation="@anim/cell_pop"
+    android:columnDelay="0.2" android:rowDelay="0.3"
+    android:directionPriority="none" />

@@ -32,6 +32,7 @@ class SettingsActivity : BaseActivity() {
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> rows[pos].action() }
         Ui.trackHighlight(list)
+        Anim.cascade(list)
     }
 
     override fun onResume() {
@@ -72,6 +73,7 @@ class SettingsActivity : BaseActivity() {
             Ui.choose(this, "Highlight colour", Ui.COLOURS.map { (name, c) ->
                 name to { Prefs.setInt(this, Prefs.HIGHLIGHT, c); refresh() } })
         },
+        Row("Animations", { onOff(Prefs.ANIM, true) }) { toggle(Prefs.ANIM, true) },
         Row("Zoom selected icon", { onOff(Prefs.ZOOM, true) }) { toggle(Prefs.ZOOM, true) },
         // Icons
         Row("Icon pack", { IconPacks.current(this)?.label ?: "None" }) { Icons.choosePack(this) { refresh() } },
