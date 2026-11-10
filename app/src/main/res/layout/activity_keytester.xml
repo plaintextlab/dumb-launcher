@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/last"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="12dp" android:textSize="22sp" android:textStyle="bold"
+        android:textColor="@color/focus"
+        android:text="Press any key" />
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <TextView
+            android:id="@+id/log"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:padding="12dp" android:textSize="14sp" android:fontFamily="monospace" />
+    </ScrollView>
+
+    <TextView android:id="@+id/hint" style="@style/Hint" android:text="Press ↩ Back twice to exit" />
+</LinearLayout>
