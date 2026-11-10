@@ -11,6 +11,9 @@ object Prefs {
     const val SPECIAL_APPS = "special:apps"
     const val HIGHLIGHT = "highlight"
     const val ICON_STYLE = "icon_style"
+    const val ICON_PACK = "icon_pack"
+
+    fun iconOverride(target: String) = "icon:$target"
 
     val DPAD = listOf(UP to "▲ Up", DOWN to "▼ Down", LEFT to "◀ Left", RIGHT to "▶ Right")
 

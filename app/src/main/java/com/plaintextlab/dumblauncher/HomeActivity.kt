@@ -104,7 +104,8 @@ class HomeActivity : Activity() {
             "Set $name shortcut" to { Ui.pick(this, pref, "Pick app for $name") }
         } + listOf(
             "Highlight colour" to { chooseColour() },
-            "Icon style" to { chooseIconStyle() },
+            "Icon pack" to { Icons.choosePack(this) {} },
+            "Icon style (no pack)" to { chooseIconStyle() },
             "Key tester" to { startActivity(Intent(this, KeyTesterActivity::class.java)) },
             "Choose default launcher" to { Apps.start(this, Intent(Settings.ACTION_HOME_SETTINGS)) },
             "Phone settings" to { Apps.start(this, Intent(Settings.ACTION_SETTINGS)) },

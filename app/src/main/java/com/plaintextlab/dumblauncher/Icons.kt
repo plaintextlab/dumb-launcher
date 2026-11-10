@@ -1,31 +1,45 @@
 package com.plaintextlab.dumblauncher
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.widget.Toast
 
 /**
- * Many OEM icons are adaptive icons with a white background layer, which shows up as a
- * white box on a black launcher. "Clean" draws only the foreground layer.
+ * Picks the icon for an app, in this order:
+ * 1. an icon the user picked for that app, 2. the selected icon pack, 3. the system icon.
+ * Many OEM system icons are adaptive icons with a white background layer; the "Clean"
+ * style draws only the foreground layer so there is no white box.
  */
 object Icons {
     val STYLES = listOf("Clean (no white box)", "Original")
     private const val SIZE_PX = 144
-    private val cache = HashMap<String, Drawable>()
+    private val cache = HashMap<String, Drawable?>()
 
     fun clear() = cache.clear()
 
     fun get(c: Context, e: AppEntry): Drawable? {
-        val icon = e.icon ?: return null
-        val clean = Prefs.getInt(c, Prefs.ICON_STYLE, 0) == 0
-        if (!clean || icon !is AdaptiveIconDrawable || icon.foreground == null) return icon
-        return cache.getOrPut(e.target) { foregroundOnly(c, icon) }
+        if (cache.containsKey(e.target)) return cache[e.target]
+        return resolve(c, e).also { cache[e.target] = it }
     }
 
-    private fun foregroundOnly(c: Context, icon: AdaptiveIconDrawable): Drawable {
+    private fun resolve(c: Context, e: AppEntry): Drawable? {
+        if (e.target == Prefs.SPECIAL_APPS) return e.icon
+        Prefs.get(c, Prefs.iconOverride(e.target))?.let { saved ->
+            val (pkg, name) = saved.split('|', limit = 2).let { it[0] to it.getOrElse(1) { "" } }
+            IconPacks.get(c, pkg)?.drawable(name)?.let { return it }
+        }
+        IconPacks.current(c)?.iconFor(e.target)?.let { return it }
+        return system(c, e.icon)
+    }
+
+    private fun system(c: Context, icon: Drawable?): Drawable? {
+        val clean = Prefs.getInt(c, Prefs.ICON_STYLE, 0) == 0
+        if (!clean || icon !is AdaptiveIconDrawable || icon.foreground == null) return icon
         val bmp = Bitmap.createBitmap(SIZE_PX, SIZE_PX, Bitmap.Config.ARGB_8888)
         val fg = icon.foreground.mutate()
         // Adaptive layers are 108dp with the visible 72dp in the middle: extend by 25% each side.
@@ -33,5 +47,28 @@ object Icons {
         fg.setBounds(-pad, -pad, SIZE_PX + pad, SIZE_PX + pad)
         fg.draw(Canvas(bmp))
         return BitmapDrawable(c.resources, bmp)
+    }
+
+    fun setOverride(c: Context, target: String, pkg: String?, name: String?) {
+        Prefs.set(c, Prefs.iconOverride(target), if (pkg == null) null else "$pkg|$name")
+        cache.remove(target)
+    }
+
+    /** Let the user pick an icon for one app: choose the pack (if several), then the icon. */
+    fun change(a: Activity, e: AppEntry) {
+        val packs = IconPacks.installed(a)
+        if (packs.isEmpty()) {
+            Toast.makeText(a, "Install an icon pack first", Toast.LENGTH_LONG).show(); return
+        }
+        val open = { pkg: String -> a.startActivity(IconPickerActivity.intent(a, e.target, e.label, pkg)) }
+        if (packs.size == 1) open(packs[0].first)
+        else Ui.choose(a, "Icons from…", packs.map { (pkg, label) -> label to { open(pkg) } })
+    }
+
+    fun choosePack(a: Activity, done: () -> Unit) {
+        val items = listOf("None (system icons)" to null as String?) + IconPacks.installed(a).map { it.second to it.first }
+        Ui.choose(a, "Icon pack", items.map { (label, pkg) ->
+            label to { Prefs.set(a, Prefs.ICON_PACK, pkg); clear(); done() }
+        })
     }
 }

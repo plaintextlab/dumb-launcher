@@ -46,6 +46,8 @@ class MenuActivity : Activity() {
         val n = pos + 1
         Ui.choose(this, "Slot $n", listOf(
             "Change app" to { Ui.pick(this, Prefs.slot(n), "Pick app for $n") },
+            "Change icon" to { slots[pos]?.takeIf { it.target != Prefs.SPECIAL_APPS }?.let { Icons.change(this, it) } },
+            "Reset icon" to { slots[pos]?.let { Icons.setOverride(this, it.target, null, null); onResume() } },
             "Make it All apps" to { Prefs.set(this, Prefs.slot(n), Prefs.SPECIAL_APPS); onResume() },
             "Empty this slot" to { Prefs.set(this, Prefs.slot(n), null); onResume() },
             "Reset whole menu" to { Prefs.resetSlots(this); onResume() },

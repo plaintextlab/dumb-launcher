@@ -48,6 +48,11 @@ class AppsActivity : Activity() {
         filter()
     }
 
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged() // an icon may have changed
+    }
+
     private fun filter() {
         shown = all.filter { it.matches(query) }
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "All apps"
@@ -73,6 +78,8 @@ class AppsActivity : Activity() {
                         { Prefs.set(this, Prefs.slot(n), e.target) }
                 })
             },
+            "Change icon" to { Icons.change(this, e) },
+            "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() },
             "App info" to {
                 val pkg = e.target.substringBefore('/')
                 Apps.start(this, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))

@@ -14,8 +14,15 @@ Everything works from the keys; touch is only a fallback.
 
 The bottom bar of every screen says what the keys do. `*` is left to the phone's own software.
 
-Home → ☆ Options also has **Highlight colour** (10 colours) and **Icon style**
-("Clean" removes the white box many system icons have; "Original" shows them unchanged).
+The selected icon zooms in, Nokia style.
+
+Home → ☆ Options also has:
+- **Highlight colour**: 10 colours.
+- **Icon pack**: any installed ADW / Nova / Apex-format icon pack re-skins every app it covers.
+- **Icon style (no pack)**: "Clean" removes the white box many system icons have; "Original" shows them unchanged.
+
+To change a single app's icon, select it in Menu or All apps → ☆ → **Change icon**, then pick
+from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
 
 ## Install
 

@@ -29,8 +29,16 @@ object Ui {
         a.startActivity(AppsActivity.pickIntent(a, prefKey, title))
     }
 
-    /** Colour one row/cell: only the selected one gets the highlight. */
-    fun paint(v: View, selected: Boolean) {
+    private const val ZOOM = 1.3f
+
+    /** Colour one row/cell: only the selected one gets the highlight and a zoomed icon. */
+    fun paint(v: View, selected: Boolean, animate: Boolean = false) {
+        v.findViewById<View>(R.id.icon)?.let { icon ->
+            val s = if (selected) ZOOM else 1f
+            icon.animate().cancel()
+            if (animate) icon.animate().scaleX(s).scaleY(s).setDuration(140).start()
+            else { icon.scaleX = s; icon.scaleY = s }
+        }
         val colour = Prefs.getInt(v.context, Prefs.HIGHLIGHT, COLOURS[0].second)
         v.setBackgroundColor(if (selected) colour else Color.TRANSPARENT)
         v.findViewById<TextView>(R.id.label)?.setTextColor(
@@ -44,11 +52,12 @@ object Ui {
     }
 
     /** Repaint visible items whenever the D-pad moves the selection. */
-    fun trackHighlight(list: AbsListView) {
+    fun trackHighlight(list: AbsListView, onMove: () -> Unit = {}) {
         val repaint = {
             for (i in 0 until list.childCount) {
-                paint(list.getChildAt(i), list.firstVisiblePosition + i == list.selectedItemPosition)
+                paint(list.getChildAt(i), list.firstVisiblePosition + i == list.selectedItemPosition, animate = true)
             }
+            onMove()
         }
         list.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) = repaint()
