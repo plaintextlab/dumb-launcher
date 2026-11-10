@@ -28,6 +28,9 @@ object Prefs {
 
     fun slot(n: Int) = "slot$n"
 
+    /** Home number-key shortcut 0-9. */
+    fun num(n: Int) = "num$n"
+
     private fun sp(c: Context) = c.getSharedPreferences("launcher", Context.MODE_PRIVATE)
 
     fun get(c: Context, key: String): String? = sp(c).getString(key, null)?.takeIf { it.isNotEmpty() }

@@ -83,6 +83,12 @@ class AppsActivity : BaseActivity() {
             items += "Activities…" to { Shortcuts.showActivities(this, e.target, e.label) }
         }
         items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
+        items += "Home number key…" to {
+            Ui.choose(this, "Number key", (0..9).map { n ->
+                    "$n  ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label ?: "not set"}" to
+                        { Prefs.set(this, Prefs.num(n), e.target) }
+                })
+        }
         items += "Put in Menu slot…" to {
             Ui.choose(this, "Menu slot", (1..9).map { n ->
                 "$n  ${Apps.entry(this, Prefs.get(this, Prefs.slot(n)))?.label ?: "empty"}" to

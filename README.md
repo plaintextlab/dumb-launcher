@@ -7,12 +7,12 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → Menu · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
 | **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · hold ● → change/empty a slot |
 | **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
-The bottom bar of every screen says what the keys do. `*` is left to the phone's own software.
+`*` and `#` are left to the phone's own software.
 
 The selected icon zooms in, Nokia style.
 
@@ -37,6 +37,7 @@ The selected icon zooms in, Nokia style.
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None |
 | Icon style (no pack) | Clean (no white box) / Original |
 | Home ▲▼◀▶ shortcuts | pick an app for each |
+| Number key shortcuts (0-9) | pick an app, shortcut or activity for each digit |
 | Reset menu, Key tester, Default launcher, Phone settings | |
 
 **Shortcuts and activities.** In All apps, select an app → hold ● → **Shortcuts…** (the actions other

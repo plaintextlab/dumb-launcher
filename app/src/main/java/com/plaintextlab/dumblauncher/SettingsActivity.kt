@@ -9,6 +9,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
@@ -16,7 +17,32 @@ import android.widget.Toast
 /** Launcher settings. Each row shows its current value; ● changes it. */
 class SettingsActivity : BaseActivity() {
 
-    private class Row(val title: String, val value: () -> String = { "" }, val action: () -> Unit)
+    private class Row(val title: String, val value: () -> String = { "" }, val action: () -> Unit) {
+        val icon = iconFor(title)
+    }
+
+    companion object {
+        private fun iconFor(title: String) = when {
+            title.startsWith("Wallpaper from gallery") -> R.drawable.s_image
+            title.startsWith("Wallpaper") && title.contains("dimming") -> R.drawable.s_dim
+            title.startsWith("Wallpaper") || title.startsWith("Show wallpaper") -> R.drawable.s_wallpaper
+            title.contains("drawer background") || title.contains("blurred") -> R.drawable.s_blur
+            title.startsWith("Hide notification bar") -> R.drawable.s_fullscreen
+            title.contains("arrow-key") || title.contains("shortcut") -> R.drawable.s_dpad
+            title.startsWith("Number key") -> R.drawable.s_dialpad
+            title.startsWith("Music") -> R.drawable.ic_music
+            title.contains("otification") -> R.drawable.s_bell
+            title.startsWith("Highlight") -> R.drawable.s_palette
+            title.startsWith("Animations") -> R.drawable.s_motion
+            title.startsWith("Zoom") -> R.drawable.s_zoom
+            title.startsWith("Icon pack") -> R.drawable.s_grid
+            title.startsWith("Icon style") -> R.drawable.s_shape
+            title.startsWith("Reset") -> R.drawable.s_refresh
+            title.startsWith("Key tester") -> R.drawable.s_keyboard
+            title.contains("default launcher") -> R.drawable.s_home
+            else -> R.drawable.s_tune
+        }
+    }
 
     private lateinit var list: ListView
     private lateinit var rows: List<Row>
@@ -99,6 +125,16 @@ class SettingsActivity : BaseActivity() {
                 Ui.pick(this, pref, "Pick app for $name")
             }
         }.toTypedArray(),
+        Row("Number key shortcuts (0-9)", { "${(0..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 10 set" }) {
+            Ui.choose(this, "Number key shortcuts", (0..9).map { n ->
+                "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label ?: "not set"}" to {
+                    Ui.choose(this, "Key $n", listOf(
+                        "Choose app or shortcut" to { Ui.pick(this, Prefs.num(n), "Pick app for key $n") },
+                        "Clear" to { Prefs.set(this, Prefs.num(n), null); refresh() },
+                    ))
+                }
+            })
+        },
         Row("Reset menu to defaults", action = {
             Prefs.resetSlots(this); Toast.makeText(this, "Menu reset", Toast.LENGTH_SHORT).show()
         }),
@@ -162,6 +198,7 @@ class SettingsActivity : BaseActivity() {
             val v = convert ?: layoutInflater.inflate(R.layout.item_setting, parent, false)
             v.findViewById<TextView>(R.id.label).text = rows[pos].title
             v.findViewById<TextView>(R.id.value).text = rows[pos].value()
+            v.findViewById<ImageView>(R.id.sicon).setImageResource(rows[pos].icon)
             Ui.paint(v, pos == list.selectedItemPosition)
             return v
         }

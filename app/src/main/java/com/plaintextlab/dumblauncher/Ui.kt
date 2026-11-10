@@ -48,6 +48,7 @@ object Ui {
         }
         val text = if (selected) readableOn(colour) else v.context.getColor(R.color.fg)
         v.findViewById<TextView>(R.id.label)?.setTextColor(text)
+        v.findViewById<android.widget.ImageView>(R.id.sicon)?.setColorFilter(text)
         v.findViewById<TextView>(R.id.value)?.setTextColor(
             if (selected) text else v.context.getColor(R.color.dim))
     }

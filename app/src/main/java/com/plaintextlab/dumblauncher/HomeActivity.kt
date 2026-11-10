@@ -148,8 +148,10 @@ class HomeActivity : BaseActivity() {
         }
         if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
-        Keys.digit(code)?.let { dial(it.toString()); return true }
-        if (code == KeyEvent.KEYCODE_POUND) { dial("#"); return true }
+        Keys.digit(code)?.let { n ->
+            if (!Apps.launch(this, Prefs.get(this, Prefs.num(n)))) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
+            return true
+        }
         if (Keys.isOptions(code)) { options(); return true }
         if (Keys.isCall(code)) {
             Apps.start(this, Intent(Intent.ACTION_VIEW).setType(CallLog.Calls.CONTENT_TYPE)); return true
@@ -212,10 +214,6 @@ class HomeActivity : BaseActivity() {
             text = now.artist; visibility = if (now.artist.isEmpty()) View.GONE else View.VISIBLE
         }
         findViewById<ImageView>(R.id.musicPlay).setImageResource(if (now.playing) R.drawable.ic_pause else R.drawable.ic_play)
-    }
-
-    private fun dial(start: String) {
-        Apps.start(this, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(start))))
     }
 
     private fun options() = startActivity(Intent(this, SettingsActivity::class.java))

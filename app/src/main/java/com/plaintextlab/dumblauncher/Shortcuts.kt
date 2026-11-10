@@ -134,6 +134,12 @@ object Shortcuts {
         ) + Prefs.DPAD.map { (pref, name) ->
             "Home $name key" to { Prefs.set(a, pref, e.target); done("$name key") }
         } + listOf(
+            "Home number key…" to {
+                Ui.choose(a, "Number key", (0..9).map { n ->
+                    "$n  ${Apps.entry(a, Prefs.get(a, Prefs.num(n)))?.label ?: "not set"}" to
+                        { Prefs.set(a, Prefs.num(n), e.target); done("key $n") }
+                })
+            },
             "Menu slot…" to {
                 Ui.choose(a, "Menu slot", (1..9).map { n ->
                     "$n  ${Apps.entry(a, Prefs.get(a, Prefs.slot(n)))?.label ?: "empty"}" to

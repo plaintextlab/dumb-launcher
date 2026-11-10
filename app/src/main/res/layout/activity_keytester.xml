@@ -17,5 +17,5 @@
             android:padding="12dp" android:textSize="14sp" android:fontFamily="monospace" />
     </ScrollView>
 
-    <TextView android:id="@+id/hint" style="@style/Hint" android:text="Press ↩ Back twice to exit" />
+    <TextView android:id="@+id/hint" style="@style/Hint" android:visibility="visible" android:text="Press ↩ Back twice to exit" />
 </LinearLayout>
