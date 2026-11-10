@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AbsListView
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.ImageView
@@ -17,6 +18,7 @@ class MenuActivity : BaseActivity() {
 
     private lateinit var grid: GridView
     private var slots: List<AppEntry?> = emptyList()
+    private var cellHeight = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +30,12 @@ class MenuActivity : BaseActivity() {
         grid.setOnItemLongClickListener { _, _, pos, _ -> options(pos); true }
         Ui.trackHighlight(grid)
         Anim.cascade(grid)
+        // Three rows share the whole height: recompute whenever the grid is resized
+        // (first layout, notification bar hidden/shown).
+        grid.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
+            val h = (bottom - top - grid.paddingTop - grid.paddingBottom - 2 * grid.verticalSpacing) / 3
+            if (h > 0 && h != cellHeight) { cellHeight = h; grid.post { adapter.notifyDataSetChanged() } }
+        }
     }
 
     override fun onResume() {
@@ -73,6 +81,12 @@ class MenuActivity : BaseActivity() {
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val v = convert ?: layoutInflater.inflate(R.layout.item_grid, parent, false)
             val e = slots.getOrNull(pos)
+            if (cellHeight > 0) {
+                v.layoutParams = AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, cellHeight)
+                // Icon takes about half the cell, leaving room for the label and the zoom.
+                val side = minOf(cellHeight * 0.5f, grid.width / 3 * 0.6f).toInt()
+                v.findViewById<ImageView>(R.id.icon).layoutParams.apply { width = side; height = side }
+            }
             v.findViewById<ImageView>(R.id.icon).setImageDrawable(e?.let { Icons.get(this@MenuActivity, it) })
             v.findViewById<TextView>(R.id.label).text = "${pos + 1} ${e?.label ?: "+ empty"}"
             Ui.paint(v, pos == grid.selectedItemPosition)
