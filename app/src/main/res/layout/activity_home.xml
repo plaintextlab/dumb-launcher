@@ -25,5 +25,31 @@
             android:textSize="20sp" android:textColor="@color/focus" />
     </LinearLayout>
 
+    <!-- D-pad cross: shows which app each arrow key opens. -->
+    <LinearLayout
+        android:id="@+id/dpad"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" android:layout_marginBottom="12dp"
+        android:orientation="vertical" android:gravity="center_horizontal">
+
+        <include android:id="@+id/sc_up" layout="@layout/item_shortcut" />
+
+        <LinearLayout
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical">
+
+            <include android:id="@+id/sc_left" layout="@layout/item_shortcut" />
+
+            <TextView
+                android:layout_width="48dp" android:layout_height="48dp"
+                android:gravity="center" android:text="●"
+                android:textSize="22sp" android:textColor="@color/dim" />
+
+            <include android:id="@+id/sc_right" layout="@layout/item_shortcut" />
+        </LinearLayout>
+
+        <include android:id="@+id/sc_down" layout="@layout/item_shortcut" />
+    </LinearLayout>
+
     <TextView android:id="@+id/hint" style="@style/Hint" />
 </LinearLayout>

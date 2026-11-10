@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One arm of the Home D-pad cross: the app's icon, or a faint arrow when nothing is set. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="48dp" android:layout_height="48dp">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="40dp" android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="18sp" android:textColor="@color/dim" />
+</FrameLayout>

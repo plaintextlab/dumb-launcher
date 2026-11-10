@@ -25,6 +25,7 @@ The selected icon zooms in, Nokia style.
 | Show wallpaper on | Home screen only · All launcher screens · Off (black) |
 | Wallpaper dimming | 0 / 25 / 50 / 75 % (keeps text readable) |
 | Hide notification bar | On / Off (swipe down to peek) |
+| Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons) |
 | Show missed calls & messages | On / Off |
 | Highlight colour | 10 colours |
 | Animations | On / Off (screen transitions, menu pop-in, list cascade, highlight fade) |

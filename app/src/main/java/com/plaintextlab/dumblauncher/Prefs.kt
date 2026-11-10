@@ -18,6 +18,7 @@ object Prefs {
     const val SHOW_COUNTS = "show_counts"
     const val ZOOM = "zoom"
     const val ANIM = "anim"
+    const val SHOW_DPAD = "show_dpad"
 
     fun iconOverride(target: String) = "icon:$target"
 

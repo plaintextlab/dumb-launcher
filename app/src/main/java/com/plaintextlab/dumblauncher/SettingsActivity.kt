@@ -68,6 +68,7 @@ class SettingsActivity : BaseActivity() {
         },
         // Screen
         Row("Hide notification bar", { onOff(Prefs.HIDE_STATUS, false) }) { toggle(Prefs.HIDE_STATUS, false) },
+        Row("Show arrow-key apps on Home", { onOff(Prefs.SHOW_DPAD, true) }) { toggle(Prefs.SHOW_DPAD, true) },
         Row("Show missed calls & messages", { onOff(Prefs.SHOW_COUNTS, true) }) { toggle(Prefs.SHOW_COUNTS, true) },
         Row("Highlight colour", { Ui.COLOURS.firstOrNull { it.second == Prefs.getInt(this, Prefs.HIGHLIGHT, Ui.COLOURS[0].second) }?.first ?: "" }) {
             Ui.choose(this, "Highlight colour", Ui.COLOURS.map { (name, c) ->

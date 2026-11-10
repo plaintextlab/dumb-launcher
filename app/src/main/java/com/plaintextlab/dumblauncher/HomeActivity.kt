@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.CallLog
 import android.view.KeyEvent
+import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 
 /** Home screen: clock, missed calls / unread messages, and key shortcuts. */
@@ -30,6 +32,7 @@ class HomeActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         refreshStatus()
+        refreshShortcuts()
         Anim.homeArrive(findViewById(R.id.clockBox), status)
     }
 
@@ -44,6 +47,21 @@ class HomeActivity : BaseActivity() {
         val unread = count(Manifest.permission.READ_SMS, Uri.parse("content://sms/inbox"), "read=0")
         if (unread > 0) lines += "$unread new message" + if (unread > 1) "s" else ""
         status.text = if (Prefs.getBool(this, Prefs.SHOW_COUNTS, true)) lines.joinToString("\n") else ""
+    }
+
+    /** Fill the D-pad cross with each arrow's app icon (or a faint arrow if unset). */
+    private fun refreshShortcuts() {
+        val dpad = findViewById<View>(R.id.dpad)
+        dpad.visibility = if (Prefs.getBool(this, Prefs.SHOW_DPAD, true)) View.VISIBLE else View.GONE
+        val arms = listOf(R.id.sc_up to "▲", R.id.sc_down to "▼", R.id.sc_left to "◀", R.id.sc_right to "▶")
+        for ((i, arm) in arms.withIndex()) {
+            val v = findViewById<View>(arm.first)
+            val entry = Apps.entry(this, Prefs.get(this, Prefs.DPAD[i].first))
+            val icon = entry?.let { Icons.get(this, it) }
+            v.findViewById<ImageView>(R.id.icon).setImageDrawable(icon)
+            v.findViewById<TextView>(R.id.label).text = if (icon == null) arm.second else ""
+            v.contentDescription = entry?.label
+        }
     }
 
     private fun count(perm: String, uri: Uri, where: String): Int {
