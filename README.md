@@ -39,6 +39,11 @@ The selected icon zooms in, Nokia style.
 | Home ▲▼◀▶ shortcuts | pick an app for each |
 | Reset menu, Key tester, Default launcher, Phone settings | |
 
+**Shortcuts and activities.** In All apps, select an app → hold ● → **Shortcuts…** (the actions other
+launchers show when you hold an icon) or **Activities…** (the app's individual screens). Pick one and
+choose where it goes: the app drawer, a Home arrow key, or a Menu slot. "Add to Home screen" from apps
+(e.g. a Chrome page) also lands in the app drawer. App shortcuts need Dumb Launcher to be the default launcher.
+
 To change a single app's icon, select it in Menu or All apps → hold ● → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
 

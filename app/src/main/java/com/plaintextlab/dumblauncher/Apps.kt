@@ -40,6 +40,7 @@ object Apps {
             .map { ComponentName(it.activityInfo.packageName, it.activityInfo.name) to it }
             .filter { it.first != home }
             .map { (cn, ri) -> AppEntry(cn.flattenToString(), ri.loadLabel(pm).toString(), ri.loadIcon(pm)) }
+            .plus(Shortcuts.drawerExtras(c).mapNotNull { Shortcuts.entry(c, it) })
             .sortedBy { it.label.lowercase() }
     }
 
@@ -48,6 +49,7 @@ object Apps {
         if (target == Prefs.SPECIAL_APPS) {
             return AppEntry(target, "All apps", c.getDrawable(R.drawable.ic_launcher))
         }
+        if (Shortcuts.isExtra(target)) return Shortcuts.entry(c, target)
         val cn = ComponentName.unflattenFromString(target) ?: return null
         return try {
             val info = c.packageManager.getActivityInfo(cn, 0)
@@ -62,6 +64,7 @@ object Apps {
         if (target == Prefs.SPECIAL_APPS) {
             a.startActivity(Intent(a, AppsActivity::class.java)); return true
         }
+        if (Shortcuts.isExtra(target)) return Shortcuts.launch(a, target)
         val cn = ComponentName.unflattenFromString(target) ?: return false
         val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setComponent(cn)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)

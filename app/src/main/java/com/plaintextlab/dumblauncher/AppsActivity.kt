@@ -71,23 +71,30 @@ class AppsActivity : BaseActivity() {
         else Apps.launch(this, e.target)
     }
 
+    /** Re-read the app list (after adding/removing a drawer shortcut). */
+    fun reload() { all = Apps.all(this); filter() }
+
     private fun options(e: AppEntry) {
-        val items = Prefs.DPAD.map { (pref, name) ->
-            "Home $name shortcut" to { Prefs.set(this, pref, e.target) }
-        } + listOf(
-            "Put in Menu slot…" to {
-                Ui.choose(this, "Menu slot", (1..9).map { n ->
-                    "$n  ${Apps.entry(this, Prefs.get(this, Prefs.slot(n)))?.label ?: "empty"}" to
-                        { Prefs.set(this, Prefs.slot(n), e.target) }
-                })
-            },
-            "Change icon" to { Icons.change(this, e) },
-            "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() },
-            "App info" to {
-                val pkg = e.target.substringBefore('/')
-                Apps.start(this, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
-            },
-        )
+        val extra = Shortcuts.isExtra(e.target)
+        val pkg = Shortcuts.packageOf(e.target)
+        val items = mutableListOf<Pair<String, () -> Any?>>()
+        if (!extra) {
+            items += "Shortcuts…" to { Shortcuts.showShortcuts(this, e.target, e.label) }
+            items += "Activities…" to { Shortcuts.showActivities(this, e.target, e.label) }
+        }
+        items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
+        items += "Put in Menu slot…" to {
+            Ui.choose(this, "Menu slot", (1..9).map { n ->
+                "$n  ${Apps.entry(this, Prefs.get(this, Prefs.slot(n)))?.label ?: "empty"}" to
+                    { Prefs.set(this, Prefs.slot(n), e.target) }
+            })
+        }
+        items += "Change icon" to { Icons.change(this, e) }
+        items += "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() }
+        if (extra) items += "Remove from drawer" to { Shortcuts.removeFromDrawer(this, e.target); reload() }
+        else items += "App info" to {
+            Apps.start(this, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
+        }
         Ui.choose(this, e.label, items)
     }
 
