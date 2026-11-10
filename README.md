@@ -23,6 +23,8 @@ The selected icon zooms in, Nokia style.
 | Wallpaper from gallery | pick a picture → home screen, lock screen or both |
 | Wallpaper from system picker | the phone's own wallpaper chooser |
 | Show wallpaper on | Home screen only · All launcher screens · Off (black) |
+| App drawer background | Blurred wallpaper · See-through wallpaper · Black |
+| Refresh blurred wallpaper | re-makes the blur after changing wallpaper outside the launcher |
 | Wallpaper dimming | 0 / 25 / 50 / 75 % (keeps text readable) |
 | Hide notification bar | On / Off (swipe down to peek) |
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons) |

@@ -62,6 +62,11 @@ class SettingsActivity : BaseActivity() {
             Ui.choose(this, "Show wallpaper on", Look.WALL_MODES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.WALL_MODE, i); Look.apply(this, false); refresh() } })
         },
+        Row("App drawer background", { Look.DRAWER_MODES[Prefs.getInt(this, Prefs.DRAWER_BG, 0)] }) {
+            Ui.choose(this, "App drawer background", Look.DRAWER_MODES.mapIndexed { i, s ->
+                s to { Prefs.setInt(this, Prefs.DRAWER_BG, i); refresh() } })
+        },
+        Row("Refresh blurred wallpaper", action = { rebuildBlur() }),
         Row("Wallpaper dimming", { "${Prefs.getInt(this, Prefs.WALL_DIM, 50)}%" }) {
             Ui.choose(this, "Darken wallpaper by", Look.DIMS.map { d ->
                 "$d%" to { Prefs.setInt(this, Prefs.WALL_DIM, d); Look.apply(this, false); refresh() } })
@@ -115,12 +120,25 @@ class SettingsActivity : BaseActivity() {
                 contentResolver.openInputStream(uri)!!.use {
                     WallpaperManager.getInstance(this).setStream(it, null, true, which)
                 }
+                if (which and WallpaperManager.FLAG_SYSTEM != 0) { Blur.saveSource(this, uri); Blur.rebuild(this) }
                 true
             } catch (e: Exception) {
                 false
             }
             runOnUiThread {
                 Toast.makeText(this, if (ok) "Wallpaper set" else "Could not use that picture", Toast.LENGTH_SHORT).show()
+            }
+        }.start()
+    }
+
+    private fun rebuildBlur() {
+        Thread {
+            val ok = Blur.rebuild(this)
+            runOnUiThread {
+                Toast.makeText(this,
+                    if (ok) "Blurred wallpaper updated"
+                    else "Android won't share this wallpaper. Set it with \"Wallpaper from gallery\" instead.",
+                    Toast.LENGTH_LONG).show()
             }
         }.start()
     }

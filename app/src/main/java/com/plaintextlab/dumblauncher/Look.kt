@@ -3,6 +3,7 @@ package com.plaintextlab.dumblauncher
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -14,18 +15,29 @@ import android.view.WindowManager
 object Look {
     val WALL_MODES = listOf("Home screen only", "All launcher screens", "Off (black)")
     val DIMS = listOf(0, 25, 50, 75)
+    val DRAWER_MODES = listOf("Blurred wallpaper", "See-through wallpaper", "Black")
 
-    fun apply(a: Activity, isHome: Boolean) {
+    fun apply(a: Activity, isHome: Boolean, isDrawer: Boolean = false) {
         val w = a.window
-        val mode = Prefs.getInt(a, Prefs.WALL_MODE, 0)
-        val show = mode == 1 || (mode == 0 && isHome)
-        if (show) {
-            w.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-            val dim = Prefs.getInt(a, Prefs.WALL_DIM, 50)
-            w.setBackgroundDrawable(ColorDrawable(Color.argb(dim * 255 / 100, 0, 0, 0)))
-        } else {
-            w.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-            w.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        val dim = ColorDrawable(Color.argb(Prefs.getInt(a, Prefs.WALL_DIM, 50) * 255 / 100, 0, 0, 0))
+        val wallMode = Prefs.getInt(a, Prefs.WALL_MODE, 0)
+        // 0 = blurred, 1 = see-through, 2 = black
+        val bg = if (isDrawer) Prefs.getInt(a, Prefs.DRAWER_BG, 0)
+                 else if (wallMode == 1 || (wallMode == 0 && isHome)) 1 else 2
+        val blurred = if (bg == 0) Blur.drawable(a) else null
+        when {
+            blurred != null -> {
+                w.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                w.setBackgroundDrawable(LayerDrawable(arrayOf(blurred, dim)))
+            }
+            bg <= 1 -> { // see-through (also the fallback while the blur isn't ready)
+                w.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                w.setBackgroundDrawable(dim)
+            }
+            else -> {
+                w.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                w.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+            }
         }
 
         val hide = Prefs.getBool(a, Prefs.HIDE_STATUS, false)
@@ -48,6 +60,7 @@ object Look {
 /** Every launcher screen applies the look settings when it comes to the front. */
 abstract class BaseActivity : Activity() {
     open val isHome = false
+    open val isDrawer = false
 
     /** The Menu zooms open (S60 style); other screens slide in from the right. */
     open val zooms = false
@@ -69,6 +82,10 @@ abstract class BaseActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        Look.apply(this, isHome)
+        Look.apply(this, isHome, isDrawer)
+        // First time in the drawer: make the blurred wallpaper in the background, then show it.
+        if (isDrawer && Prefs.getInt(this, Prefs.DRAWER_BG, 0) == 0 && Blur.get(this) == null) {
+            Thread { if (Blur.rebuild(this)) runOnUiThread { Look.apply(this, isHome, isDrawer) } }.start()
+        }
     }
 }

@@ -19,6 +19,7 @@ object Prefs {
     const val ZOOM = "zoom"
     const val ANIM = "anim"
     const val SHOW_DPAD = "show_dpad"
+    const val DRAWER_BG = "drawer_bg"
 
     fun iconOverride(target: String) = "icon:$target"
 

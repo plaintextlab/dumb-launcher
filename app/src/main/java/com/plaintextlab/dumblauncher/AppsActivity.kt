@@ -17,6 +17,8 @@ import android.widget.TextView
 /** A–Z app list with T9 filtering. Also used to pick an app for a slot or shortcut. */
 class AppsActivity : BaseActivity() {
 
+    override val isDrawer = true
+
     companion object {
         private const val EXTRA_PREF = "pref"
         private const val EXTRA_TITLE = "title"
