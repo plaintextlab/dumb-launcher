@@ -7,8 +7,8 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · ☆ → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
-| **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · ☆ → change/empty a slot |
+| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · hold ● → change/empty a slot |
 | **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
@@ -16,7 +16,7 @@ The bottom bar of every screen says what the keys do. `*` is left to the phone's
 
 The selected icon zooms in, Nokia style.
 
-**Settings** (☆ on Home, or "Launcher settings" in All apps):
+**Settings** (hold ● on Home, or "Launcher settings" in All apps):
 
 | Setting | Choices |
 |---|---|
@@ -34,7 +34,7 @@ The selected icon zooms in, Nokia style.
 | Home ▲▼◀▶ shortcuts | pick an app for each |
 | Reset menu, Key tester, Default launcher, Phone settings | |
 
-To change a single app's icon, select it in Menu or All apps → ☆ → **Change icon**, then pick
+To change a single app's icon, select it in Menu or All apps → hold ● → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
 
 ## Install

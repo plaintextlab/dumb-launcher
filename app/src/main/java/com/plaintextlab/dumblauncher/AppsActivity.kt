@@ -38,7 +38,7 @@ class AppsActivity : BaseActivity() {
         queryView = findViewById(R.id.query)
         findViewById<TextView>(R.id.hint).text =
             if (pickPref != null) "● Choose    0-9 Search    ↩ Cancel"
-            else "● Open    0-9 Search    ☆ Options"
+            else "● Open    0-9 Search    hold ● Options"
         list = findViewById(R.id.list)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }

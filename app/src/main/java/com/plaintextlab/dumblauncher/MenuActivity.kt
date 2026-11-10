@@ -23,7 +23,7 @@ class MenuActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
-        findViewById<TextView>(R.id.hint).text = "● Open    1-9 Jump    ☆ Options"
+        findViewById<TextView>(R.id.hint).text = "● Open    1-9 Jump    hold ● Options"
         grid = findViewById(R.id.grid)
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> open(pos) }

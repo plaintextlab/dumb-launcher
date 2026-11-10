@@ -20,7 +20,7 @@ class HomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         status = findViewById(R.id.status)
-        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    ☆ Settings"
+        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    hold ● Settings"
         Prefs.ensureDefaults(this)
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
