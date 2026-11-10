@@ -47,7 +47,8 @@ from a grid of the pack's icons (type on the keypad to search icon names). **Res
 
 | Key | Code | Use |
 |---|---|---|
-| ☆ | F3 (133), sometimes 1000 | Options |
+| ☆ | F3 (133) | Settings / Options |
+| `*` | STAR or vendor 1000 | not used (belongs to the phone) |
 | 👤 | F1 (131) | Contacts |
 | ✉ | F2 (132) | Messages |
 | 📷 | CAMERA (27) | Camera |
