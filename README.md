@@ -7,7 +7,7 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
 | **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · hold ● → change/empty a slot |
 | **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
@@ -28,7 +28,9 @@ The selected icon zooms in, Nokia style.
 | Wallpaper dimming | 0 / 25 / 50 / 75 % (keeps text readable) |
 | Hide notification bar | On / Off (swipe down to peek) |
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons) |
-| Show missed calls & messages | On / Off |
+| Show notifications on Home | On / Off |
+| Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next |
+| Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
 | Highlight colour | 10 colours |
 | Animations | On / Off (screen transitions, menu pop-in, list cascade, highlight fade) |
 | Zoom selected icon | On / Off |

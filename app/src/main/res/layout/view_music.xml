@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Music widget on Home: album art, title/artist, prev / play-pause / next. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/music"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp" android:layout_marginTop="16dp"
+    android:background="@color/card" android:padding="8dp"
+    android:orientation="vertical" android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/musicArt"
+            android:layout_width="56dp" android:layout_height="56dp"
+            android:scaleType="centerCrop" android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:layout_marginStart="10dp" android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/musicTitle"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:maxLines="1" android:ellipsize="end"
+                android:textSize="17sp" android:textStyle="bold" android:textColor="@color/fg" />
+
+            <TextView
+                android:id="@+id/musicArtist"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:maxLines="1" android:ellipsize="end"
+                android:textSize="14sp" android:textColor="@color/dim" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/musicPrev"
+            android:layout_width="40dp" android:layout_height="40dp"
+            android:background="@null" android:src="@drawable/ic_prev"
+            android:focusable="false" android:contentDescription="Previous" />
+
+        <ImageButton
+            android:id="@+id/musicPlay"
+            android:layout_width="44dp" android:layout_height="44dp"
+            android:background="@null" android:src="@drawable/ic_play"
+            android:focusable="false" android:contentDescription="Play or pause" />
+
+        <ImageButton
+            android:id="@+id/musicNext"
+            android:layout_width="40dp" android:layout_height="40dp"
+            android:background="@null" android:src="@drawable/ic_next"
+            android:focusable="false" android:contentDescription="Next" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:gravity="center"
+        android:text="hold ◀ prev    hold ▼ play/pause    hold ▶ next"
+        android:textSize="12sp" android:textColor="@color/dim" />
+</LinearLayout>

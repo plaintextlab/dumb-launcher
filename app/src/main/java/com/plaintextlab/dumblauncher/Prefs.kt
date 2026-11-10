@@ -20,6 +20,7 @@ object Prefs {
     const val ANIM = "anim"
     const val SHOW_DPAD = "show_dpad"
     const val DRAWER_BG = "drawer_bg"
+    const val SHOW_MUSIC = "show_music"
 
     fun iconOverride(target: String) = "icon:$target"
 

@@ -5,4 +5,5 @@
     <color name="focus">#FFC107</color>
     <color name="focus_fg">#000000</color>
     <color name="bar">#1E1E1E</color>
+    <color name="card">#B31E1E1E</color>
 </resources>

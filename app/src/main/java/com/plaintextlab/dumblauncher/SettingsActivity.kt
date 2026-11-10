@@ -74,7 +74,13 @@ class SettingsActivity : BaseActivity() {
         // Screen
         Row("Hide notification bar", { onOff(Prefs.HIDE_STATUS, false) }) { toggle(Prefs.HIDE_STATUS, false) },
         Row("Show arrow-key apps on Home", { onOff(Prefs.SHOW_DPAD, true) }) { toggle(Prefs.SHOW_DPAD, true) },
-        Row("Show missed calls & messages", { onOff(Prefs.SHOW_COUNTS, true) }) { toggle(Prefs.SHOW_COUNTS, true) },
+        Row("Show notifications on Home", { onOff(Prefs.SHOW_COUNTS, true) }) { toggle(Prefs.SHOW_COUNTS, true) },
+        Row("Music widget on Home", { onOff(Prefs.SHOW_MUSIC, true) }) { toggle(Prefs.SHOW_MUSIC, true) },
+        Row("Notification access (other apps, song info)", { if (NotifListener.granted(this)) "Allowed" else "Not allowed: calls, SMS and basic music controls still work" }) {
+            if (!Apps.start(this, Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))) {
+                Toast.makeText(this, "This phone doesn't allow notification access", Toast.LENGTH_LONG).show()
+            }
+        },
         Row("Highlight colour", { Ui.COLOURS.firstOrNull { it.second == Prefs.getInt(this, Prefs.HIGHLIGHT, Ui.COLOURS[0].second) }?.first ?: "" }) {
             Ui.choose(this, "Highlight colour", Ui.COLOURS.map { (name, c) ->
                 name to { Prefs.setInt(this, Prefs.HIGHLIGHT, c); refresh() } })
