@@ -24,6 +24,7 @@ class MenuActivity : Activity() {
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> open(pos) }
         grid.setOnItemLongClickListener { _, _, pos, _ -> options(pos); true }
+        Ui.trackHighlight(grid)
     }
 
     override fun onResume() {
@@ -67,8 +68,9 @@ class MenuActivity : Activity() {
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val v = convert ?: layoutInflater.inflate(R.layout.item_grid, parent, false)
             val e = slots.getOrNull(pos)
-            v.findViewById<ImageView>(R.id.icon).setImageDrawable(e?.icon)
+            v.findViewById<ImageView>(R.id.icon).setImageDrawable(e?.let { Icons.get(this@MenuActivity, it) })
             v.findViewById<TextView>(R.id.label).text = "${pos + 1} ${e?.label ?: "+ empty"}"
+            Ui.paint(v, pos == grid.selectedItemPosition)
             return v
         }
     }

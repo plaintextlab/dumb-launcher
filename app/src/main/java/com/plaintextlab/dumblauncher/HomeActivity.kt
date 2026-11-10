@@ -2,17 +2,14 @@ package com.plaintextlab.dumblauncher
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CallLog
 import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.TextView
-import android.widget.Toast
 
 /** Home screen: clock, missed calls / unread messages, and key shortcuts. */
 class HomeActivity : Activity() {
@@ -58,12 +55,13 @@ class HomeActivity : Activity() {
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-        if (Keys.isOk(code) || code == KeyEvent.KEYCODE_STAR || code == KeyEvent.KEYCODE_POUND) {
+        if (Keys.isOk(code)) {
             event.startTracking(); return true
         }
         if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
         Keys.digit(code)?.let { dial(it.toString()); return true }
+        if (code == KeyEvent.KEYCODE_POUND) { dial("#"); return true }
         Keys.dpadPref(code)?.let { pref ->
             if (!Apps.launch(this, Prefs.get(this, pref))) {
                 val name = Prefs.DPAD.first { it.first == pref }.second
@@ -82,7 +80,6 @@ class HomeActivity : Activity() {
     override fun onKeyLongPress(code: Int, event: KeyEvent): Boolean {
         when {
             Keys.isOk(code) -> options()
-            code == KeyEvent.KEYCODE_STAR -> toggleVibrate()
             else -> return super.onKeyLongPress(code, event)
         }
         return true
@@ -92,8 +89,6 @@ class HomeActivity : Activity() {
         val shortPress = event.isTracking && !event.isCanceled
         when {
             Keys.isOk(code) -> { if (shortPress) startActivity(Intent(this, MenuActivity::class.java)) }
-            code == KeyEvent.KEYCODE_STAR -> { if (shortPress) dial("*") }
-            code == KeyEvent.KEYCODE_POUND -> { if (shortPress) dial("#") }
             code == KeyEvent.KEYCODE_BACK -> {}
             else -> return super.onKeyUp(code, event)
         }
@@ -104,25 +99,22 @@ class HomeActivity : Activity() {
         Apps.start(this, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(start))))
     }
 
-    private fun toggleVibrate() {
-        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        try {
-            val vibrate = am.ringerMode != AudioManager.RINGER_MODE_VIBRATE
-            am.ringerMode = if (vibrate) AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_NORMAL
-            Toast.makeText(this, if (vibrate) "Vibrate on" else "Sound on", Toast.LENGTH_SHORT).show()
-        } catch (e: SecurityException) {
-            Toast.makeText(this, "Allow Do Not Disturb access first", Toast.LENGTH_LONG).show()
-        }
-    }
-
     private fun options() {
         val items = Prefs.DPAD.map { (pref, name) ->
             "Set $name shortcut" to { Ui.pick(this, pref, "Pick app for $name") }
         } + listOf(
+            "Highlight colour" to { chooseColour() },
+            "Icon style" to { chooseIconStyle() },
             "Key tester" to { startActivity(Intent(this, KeyTesterActivity::class.java)) },
             "Choose default launcher" to { Apps.start(this, Intent(Settings.ACTION_HOME_SETTINGS)) },
             "Phone settings" to { Apps.start(this, Intent(Settings.ACTION_SETTINGS)) },
         )
         Ui.choose(this, "Options", items)
     }
+
+    private fun chooseColour() = Ui.choose(this, "Highlight colour",
+        Ui.COLOURS.map { (name, colour) -> name to { Prefs.setInt(this, Prefs.HIGHLIGHT, colour) } })
+
+    private fun chooseIconStyle() = Ui.choose(this, "Icon style",
+        Icons.STYLES.mapIndexed { i, name -> name to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Icons.clear() } })
 }

@@ -43,6 +43,7 @@ class AppsActivity : Activity() {
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) options(shown[pos]); true }
+        Ui.trackHighlight(list)
         all = Apps.all(this)
         filter()
     }
@@ -97,8 +98,9 @@ class AppsActivity : Activity() {
         override fun getItemId(pos: Int) = pos.toLong()
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val v = convert ?: layoutInflater.inflate(R.layout.item_row, parent, false)
-            v.findViewById<ImageView>(R.id.icon).setImageDrawable(shown[pos].icon)
+            v.findViewById<ImageView>(R.id.icon).setImageDrawable(Icons.get(this@AppsActivity, shown[pos]))
             v.findViewById<TextView>(R.id.label).text = shown[pos].label
+            Ui.paint(v, pos == list.selectedItemPosition)
             return v
         }
     }

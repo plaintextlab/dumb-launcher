@@ -2,8 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:orientation="vertical" android:gravity="center"
-    android:background="@drawable/item_bg" android:padding="8dp"
-    android:duplicateParentState="true">
+ android:padding="8dp">
 
     <ImageView android:id="@+id/icon" android:layout_width="56dp" android:layout_height="56dp" />
 

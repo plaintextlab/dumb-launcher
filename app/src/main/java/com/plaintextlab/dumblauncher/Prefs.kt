@@ -9,6 +9,8 @@ object Prefs {
     const val LEFT = "dpad_left"
     const val RIGHT = "dpad_right"
     const val SPECIAL_APPS = "special:apps"
+    const val HIGHLIGHT = "highlight"
+    const val ICON_STYLE = "icon_style"
 
     val DPAD = listOf(UP to "▲ Up", DOWN to "▼ Down", LEFT to "◀ Left", RIGHT to "▶ Right")
 
@@ -18,6 +20,9 @@ object Prefs {
 
     fun get(c: Context, key: String): String? = sp(c).getString(key, null)?.takeIf { it.isNotEmpty() }
     fun set(c: Context, key: String, value: String?) = sp(c).edit().putString(key, value ?: "").apply()
+
+    fun getInt(c: Context, key: String, def: Int) = sp(c).getInt(key, def)
+    fun setInt(c: Context, key: String, value: Int) = sp(c).edit().putInt(key, value).apply()
 
     fun ensureDefaults(c: Context) {
         if (sp(c).getBoolean("defaults_done", false)) return

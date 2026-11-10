@@ -7,12 +7,15 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold `*` → vibrate on/off · ☆ → Options · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · ☆ → Options · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
 | **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · ☆ → change/empty a slot |
 | **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
-The bottom bar of every screen says what the keys do.
+The bottom bar of every screen says what the keys do. `*` is left to the phone's own software.
+
+Home → ☆ Options also has **Highlight colour** (10 colours) and **Icon style**
+("Clean" removes the white box many system icons have; "Original" shows them unchanged).
 
 ## Install
 
