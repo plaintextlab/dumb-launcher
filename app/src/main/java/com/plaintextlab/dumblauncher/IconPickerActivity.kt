@@ -15,7 +15,7 @@ import android.widget.ImageView
 import android.widget.TextView
 
 /** Grid of every icon in one pack. Type on the keypad to search by icon name (T9). */
-class IconPickerActivity : Activity() {
+class IconPickerActivity : BaseActivity() {
 
     companion object {
         fun intent(c: Context, target: String, label: String, pack: String) =

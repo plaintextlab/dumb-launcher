@@ -11,7 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 
 /** 3×3 grid. Keys 1-9 open the matching cell directly. */
-class MenuActivity : Activity() {
+class MenuActivity : BaseActivity() {
 
     private lateinit var grid: GridView
     private var slots: List<AppEntry?> = emptyList()

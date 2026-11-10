@@ -34,15 +34,17 @@ object Ui {
     /** Colour one row/cell: only the selected one gets the highlight and a zoomed icon. */
     fun paint(v: View, selected: Boolean, animate: Boolean = false) {
         v.findViewById<View>(R.id.icon)?.let { icon ->
-            val s = if (selected) ZOOM else 1f
+            val s = if (selected && Prefs.getBool(v.context, Prefs.ZOOM, true)) ZOOM else 1f
             icon.animate().cancel()
             if (animate) icon.animate().scaleX(s).scaleY(s).setDuration(140).start()
             else { icon.scaleX = s; icon.scaleY = s }
         }
         val colour = Prefs.getInt(v.context, Prefs.HIGHLIGHT, COLOURS[0].second)
         v.setBackgroundColor(if (selected) colour else Color.TRANSPARENT)
-        v.findViewById<TextView>(R.id.label)?.setTextColor(
-            if (selected) readableOn(colour) else v.context.getColor(R.color.fg))
+        val text = if (selected) readableOn(colour) else v.context.getColor(R.color.fg)
+        v.findViewById<TextView>(R.id.label)?.setTextColor(text)
+        v.findViewById<TextView>(R.id.value)?.setTextColor(
+            if (selected) text else v.context.getColor(R.color.dim))
     }
 
     /** Black text on light colours, white on dark ones. */

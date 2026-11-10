@@ -7,7 +7,7 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · ☆ → Options · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Home**: clock, missed calls, new messages | ● OK → Menu · 0-9 → dialer · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · ☆ → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
 | **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · ☆ → change/empty a slot |
 | **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
@@ -16,10 +16,22 @@ The bottom bar of every screen says what the keys do. `*` is left to the phone's
 
 The selected icon zooms in, Nokia style.
 
-Home → ☆ Options also has:
-- **Highlight colour**: 10 colours.
-- **Icon pack**: any installed ADW / Nova / Apex-format icon pack re-skins every app it covers.
-- **Icon style (no pack)**: "Clean" removes the white box many system icons have; "Original" shows them unchanged.
+**Settings** (☆ on Home, or "Launcher settings" in All apps):
+
+| Setting | Choices |
+|---|---|
+| Wallpaper from gallery | pick a picture → home screen, lock screen or both |
+| Wallpaper from system picker | the phone's own wallpaper chooser |
+| Show wallpaper on | Home screen only · All launcher screens · Off (black) |
+| Wallpaper dimming | 0 / 25 / 50 / 75 % (keeps text readable) |
+| Hide notification bar | On / Off (swipe down to peek) |
+| Show missed calls & messages | On / Off |
+| Highlight colour | 10 colours |
+| Zoom selected icon | On / Off |
+| Icon pack | any installed ADW / Nova / Apex-format pack, or None |
+| Icon style (no pack) | Clean (no white box) / Original |
+| Home ▲▼◀▶ shortcuts | pick an app for each |
+| Reset menu, Key tester, Default launcher, Phone settings | |
 
 To change a single app's icon, select it in Menu or All apps → ☆ → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.

@@ -1,18 +1,18 @@
 package com.plaintextlab.dumblauncher
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CallLog
-import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.TextView
 
 /** Home screen: clock, missed calls / unread messages, and key shortcuts. */
-class HomeActivity : Activity() {
+class HomeActivity : BaseActivity() {
+
+    override val isHome = true
 
     private lateinit var status: TextView
 
@@ -20,7 +20,7 @@ class HomeActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         status = findViewById(R.id.status)
-        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    ☆ Options"
+        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    ☆ Settings"
         Prefs.ensureDefaults(this)
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
@@ -42,7 +42,7 @@ class HomeActivity : Activity() {
         if (missed > 0) lines += "$missed missed call" + if (missed > 1) "s" else ""
         val unread = count(Manifest.permission.READ_SMS, Uri.parse("content://sms/inbox"), "read=0")
         if (unread > 0) lines += "$unread new message" + if (unread > 1) "s" else ""
-        status.text = lines.joinToString("\n")
+        status.text = if (Prefs.getBool(this, Prefs.SHOW_COUNTS, true)) lines.joinToString("\n") else ""
     }
 
     private fun count(perm: String, uri: Uri, where: String): Int {
@@ -99,23 +99,5 @@ class HomeActivity : Activity() {
         Apps.start(this, Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(start))))
     }
 
-    private fun options() {
-        val items = Prefs.DPAD.map { (pref, name) ->
-            "Set $name shortcut" to { Ui.pick(this, pref, "Pick app for $name") }
-        } + listOf(
-            "Highlight colour" to { chooseColour() },
-            "Icon pack" to { Icons.choosePack(this) {} },
-            "Icon style (no pack)" to { chooseIconStyle() },
-            "Key tester" to { startActivity(Intent(this, KeyTesterActivity::class.java)) },
-            "Choose default launcher" to { Apps.start(this, Intent(Settings.ACTION_HOME_SETTINGS)) },
-            "Phone settings" to { Apps.start(this, Intent(Settings.ACTION_SETTINGS)) },
-        )
-        Ui.choose(this, "Options", items)
-    }
-
-    private fun chooseColour() = Ui.choose(this, "Highlight colour",
-        Ui.COLOURS.map { (name, colour) -> name to { Prefs.setInt(this, Prefs.HIGHLIGHT, colour) } })
-
-    private fun chooseIconStyle() = Ui.choose(this, "Icon style",
-        Icons.STYLES.mapIndexed { i, name -> name to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Icons.clear() } })
+    private fun options() = startActivity(Intent(this, SettingsActivity::class.java))
 }

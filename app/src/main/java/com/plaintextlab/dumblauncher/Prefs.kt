@@ -12,6 +12,11 @@ object Prefs {
     const val HIGHLIGHT = "highlight"
     const val ICON_STYLE = "icon_style"
     const val ICON_PACK = "icon_pack"
+    const val WALL_MODE = "wall_mode"
+    const val WALL_DIM = "wall_dim"
+    const val HIDE_STATUS = "hide_status"
+    const val SHOW_COUNTS = "show_counts"
+    const val ZOOM = "zoom"
 
     fun iconOverride(target: String) = "icon:$target"
 
@@ -26,6 +31,9 @@ object Prefs {
 
     fun getInt(c: Context, key: String, def: Int) = sp(c).getInt(key, def)
     fun setInt(c: Context, key: String, value: Int) = sp(c).edit().putInt(key, value).apply()
+
+    fun getBool(c: Context, key: String, def: Boolean) = sp(c).getBoolean(key, def)
+    fun setBool(c: Context, key: String, value: Boolean) = sp(c).edit().putBoolean(key, value).apply()
 
     fun ensureDefaults(c: Context) {
         if (sp(c).getBoolean("defaults_done", false)) return
