@@ -23,7 +23,7 @@ class HomeActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         status = findViewById(R.id.status)
-        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    ☰ Options"
+        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    ☆ Options"
         Prefs.ensureDefaults(this)
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
@@ -61,6 +61,7 @@ class HomeActivity : Activity() {
         if (Keys.isOk(code) || code == KeyEvent.KEYCODE_STAR || code == KeyEvent.KEYCODE_POUND) {
             event.startTracking(); return true
         }
+        if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
         Keys.digit(code)?.let { dial(it.toString()); return true }
         Keys.dpadPref(code)?.let { pref ->

@@ -19,7 +19,7 @@ class MenuActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
-        findViewById<TextView>(R.id.hint).text = "● Open    1-9 Jump    ☰ / hold ● Options"
+        findViewById<TextView>(R.id.hint).text = "● Open    1-9 Jump    ☆ Options"
         grid = findViewById(R.id.grid)
         grid.adapter = adapter
         grid.setOnItemClickListener { _, _, pos, _ -> open(pos) }
@@ -52,6 +52,7 @@ class MenuActivity : Activity() {
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
+        if (Keys.handleAppKey(this, code, event)) return true
         Keys.digit(code)?.takeIf { it in 1..9 }?.let {
             grid.setSelection(it - 1); open(it - 1); return true
         }

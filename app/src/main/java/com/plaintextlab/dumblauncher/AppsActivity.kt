@@ -38,7 +38,7 @@ class AppsActivity : Activity() {
         queryView = findViewById(R.id.query)
         findViewById<TextView>(R.id.hint).text =
             if (pickPref != null) "● Choose    0-9 Search    ↩ Cancel"
-            else "● Open    0-9 Search    ☰ / hold ● Options"
+            else "● Open    0-9 Search    ☆ Options"
         list = findViewById(R.id.list)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
@@ -81,6 +81,7 @@ class AppsActivity : Activity() {
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
+        if (Keys.handleAppKey(this, code, event)) return true
         Keys.digit(code)?.let { query += it; filter(); return true }
         if (Keys.isDelete(code) && query.isNotEmpty()) { query = query.dropLast(1); filter(); return true }
         if (code == KeyEvent.KEYCODE_BACK && query.isNotEmpty()) { query = ""; filter(); return true }
