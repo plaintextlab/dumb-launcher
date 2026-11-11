@@ -7,7 +7,6 @@ import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.net.Uri
 import android.os.Bundle
-import android.provider.AlarmClock
 import android.provider.CallLog
 import android.view.KeyEvent
 import android.view.View
@@ -37,7 +36,9 @@ class HomeActivity : BaseActivity() {
         findViewById<View>(R.id.music).setOnClickListener { Music.open(this) }
         // Touch: tap the clock for the Clock app, swipe up anywhere for All apps.
         findViewById<View>(R.id.clockBox).setOnClickListener {
-            Apps.start(this, Intent(AlarmClock.ACTION_SHOW_ALARMS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            if (!Apps.launch(this, Apps.clock(this))) {
+                android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
