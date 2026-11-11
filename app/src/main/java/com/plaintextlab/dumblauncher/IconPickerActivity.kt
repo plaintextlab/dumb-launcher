@@ -82,8 +82,16 @@ class IconPickerActivity : BaseActivity() {
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val v = convert ?: layoutInflater.inflate(R.layout.item_icon, parent, false)
             val name = shown[pos]
-            val d = drawables.get(name) ?: pack?.drawable(name)?.also { drawables.put(name, it) }
-            v.findViewById<ImageView>(R.id.icon).setImageDrawable(d)
+            val iv = v.findViewById<ImageView>(R.id.icon)
+            iv.tag = name
+            val cached = drawables.get(name)
+            if (cached != null) iv.setImageDrawable(cached) else {
+                iv.setImageDrawable(null)
+                Bg.run({ pack?.drawable(name) }) { d ->
+                    if (d != null) drawables.put(name, d)
+                    if (iv.tag == name) iv.setImageDrawable(d)
+                }
+            }
             Ui.paint(v, pos == grid.selectedItemPosition)
             return v
         }

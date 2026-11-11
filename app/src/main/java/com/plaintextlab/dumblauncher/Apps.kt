@@ -39,7 +39,7 @@ object Apps {
         return pm.queryIntentActivities(intent, 0)
             .map { ComponentName(it.activityInfo.packageName, it.activityInfo.name) to it }
             .filter { it.first != home }
-            .map { (cn, ri) -> AppEntry(cn.flattenToString(), ri.loadLabel(pm).toString(), ri.loadIcon(pm)) }
+            .map { (cn, ri) -> AppEntry(cn.flattenToString(), ri.loadLabel(pm).toString(), null) } // icons load later
             .plus(Shortcuts.drawerExtras(c).mapNotNull { Shortcuts.entry(c, it) })
             .sortedBy { it.label.lowercase() }
     }
@@ -57,6 +57,14 @@ object Apps {
         } catch (e: Exception) {
             null // app was uninstalled
         }
+    }
+
+    /** The app's own icon, read on demand (background thread). */
+    fun rawIcon(c: Context, target: String): Drawable? = try {
+        if (Shortcuts.isExtra(target)) Shortcuts.entry(c, target)?.icon
+        else c.packageManager.getActivityIcon(ComponentName.unflattenFromString(target)!!)
+    } catch (e: Exception) {
+        null
     }
 
     fun launch(a: Activity, target: String?): Boolean {

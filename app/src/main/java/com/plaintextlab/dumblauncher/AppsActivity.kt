@@ -51,8 +51,11 @@ class AppsActivity : BaseActivity() {
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) options(shown[pos]); true }
         Ui.trackHighlight(list)
         Anim.cascade(list)
-        all = Apps.all(this)
-        filter()
+        // Show the remembered list at once; re-read installed apps in the background.
+        AppList.cached?.let { all = it; filter() }
+        Bg.run({ AppList.refresh(this) }) { changed ->
+            if (changed == true || all.isEmpty()) { all = AppList.cached.orEmpty(); filter() }
+        }
     }
 
     override fun onResume() {
@@ -76,7 +79,7 @@ class AppsActivity : BaseActivity() {
     }
 
     /** Re-read the app list (after adding/removing a drawer shortcut). */
-    fun reload() { all = Apps.all(this); filter() }
+    fun reload() = Bg.run({ AppList.refresh(this) }) { all = AppList.cached.orEmpty(); filter() }
 
     private fun options(e: AppEntry) {
         val extra = Shortcuts.isExtra(e.target)
@@ -119,7 +122,14 @@ class AppsActivity : BaseActivity() {
         override fun getItemId(pos: Int) = pos.toLong()
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val v = convert ?: layoutInflater.inflate(if (grid) R.layout.item_grid else R.layout.item_row, parent, false)
-            v.findViewById<ImageView>(R.id.icon).setImageDrawable(Icons.get(this@AppsActivity, shown[pos]))
+            val e = shown[pos]
+            val iv = v.findViewById<ImageView>(R.id.icon)
+            iv.tag = e.target
+            Icons.load(this@AppsActivity, e) { d, instant ->
+                if (iv.tag != e.target) return@load   // this cell was reused for another app meanwhile
+                iv.setImageDrawable(d)
+                if (!instant && Anim.on(iv.context)) { iv.alpha = 0f; iv.animate().alpha(1f).setDuration(150).start() }
+            }
             v.findViewById<TextView>(R.id.label).text = shown[pos].label
             Ui.paint(v, pos == list.selectedItemPosition)
             return v

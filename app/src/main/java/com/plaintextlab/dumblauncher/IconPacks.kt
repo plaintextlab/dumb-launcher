@@ -89,6 +89,7 @@ object IconPacks {
             .sortedBy { it.second.lowercase() }
     }
 
+    @Synchronized // called from background threads too
     fun get(c: Context, pkg: String?): IconPack? {
         if (pkg.isNullOrEmpty()) return null
         return loaded.getOrPut(pkg) {

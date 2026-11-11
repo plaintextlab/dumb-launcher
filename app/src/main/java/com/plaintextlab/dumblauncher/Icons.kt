@@ -8,6 +8,7 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.widget.Toast
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Picks the icon for an app, in this order:
@@ -18,13 +19,25 @@ import android.widget.Toast
 object Icons {
     val STYLES = listOf("Clean (no white box)", "Original")
     private const val SIZE_PX = 144
-    private val cache = HashMap<String, Drawable?>()
+    private object None
+    private val cache = ConcurrentHashMap<String, Any>()   // Drawable, or None for "no icon"
 
     fun clear() = cache.clear()
 
+    /** Loads now. Fine for a handful of icons; the drawer uses [load] instead. */
     fun get(c: Context, e: AppEntry): Drawable? {
-        if (cache.containsKey(e.target)) return cache[e.target]
-        return resolve(c, e).also { cache[e.target] = it }
+        cache[e.target]?.let { return it as? Drawable }
+        return resolve(c.applicationContext, e).also { cache[e.target] = it ?: None }
+    }
+
+    /**
+     * Shows a cached icon at once; otherwise loads it on a background thread and calls
+     * [onReady] on the UI thread. Returns true if the icon was already cached.
+     */
+    fun load(c: Context, e: AppEntry, onReady: (Drawable?, Boolean) -> Unit) {
+        cache[e.target]?.let { onReady(it as? Drawable, true); return }
+        val app = c.applicationContext
+        Bg.run({ get(app, e) }) { onReady(it, false) }
     }
 
     private fun resolve(c: Context, e: AppEntry): Drawable? {
@@ -34,7 +47,7 @@ object Icons {
             IconPacks.get(c, pkg)?.drawable(name)?.let { return it }
         }
         IconPacks.current(c)?.iconFor(e.target)?.let { return it }
-        return system(c, e.icon)
+        return system(c, e.icon ?: Apps.rawIcon(c, e.target))
     }
 
     private fun system(c: Context, icon: Drawable?): Drawable? {

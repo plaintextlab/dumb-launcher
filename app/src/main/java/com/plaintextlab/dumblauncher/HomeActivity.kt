@@ -43,6 +43,7 @@ class HomeActivity : BaseActivity() {
         refreshStatus()
         refreshShortcuts()
         refreshDock()
+        AppList.warmUp(this)
         Anim.homeArrive(findViewById(R.id.clockBox), notifs)
     }
 
