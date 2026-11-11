@@ -1,9 +1,14 @@
 <resources>
+    <!-- One accent (the highlight colour, chosen in Settings); everything else is neutral.
+         Surfaces get lighter as they come forward; text is off-white, not pure white, to cut glare. -->
     <color name="bg">#000000</color>
-    <color name="fg">#FFFFFF</color>
-    <color name="dim">#9E9E9E</color>
+    <color name="fg">#F2F2F2</color>
+    <color name="dim">#9A9A9A</color>
     <color name="focus">#FFC107</color>
     <color name="focus_fg">#000000</color>
-    <color name="bar">#1E1E1E</color>
-    <color name="card">#B31E1E1E</color>
+    <color name="bar">#141414</color>
+    <color name="surface">#1C1C1E</color>
+    <color name="card">#B8141416</color>
+    <color name="chip">#8C141416</color>
+    <color name="shadow">#99000000</color>
 </resources>

@@ -96,22 +96,25 @@ class HomeActivity : BaseActivity() {
         if (rest > 0) addChip(null, rest, prefix = "+")
     }
 
-    /** One notification chip: icon and count. */
+    /** One notification chip: icon and count on a soft rounded pill. */
     private fun addChip(icon: android.graphics.drawable.Drawable?, n: Int, prefix: String = "",
                         onTap: (() -> Unit)? = null) {
         val dp = resources.displayMetrics.density
         val chip = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding((5 * dp).toInt(), 0, (5 * dp).toInt(), 0)
+            setBackgroundResource(R.drawable.bg_chip)
+            setPadding((8 * dp).toInt(), (6 * dp).toInt(), (8 * dp).toInt(), (6 * dp).toInt())
         }
         if (icon != null) chip.addView(ImageView(this).apply { setImageDrawable(icon) },
-            LinearLayout.LayoutParams((26 * dp).toInt(), (26 * dp).toInt()))
+            LinearLayout.LayoutParams((20 * dp).toInt(), (20 * dp).toInt()))
         if (n > 0) chip.addView(TextView(this).apply {
-            text = "$prefix$n"; textSize = 20f; setTextColor(getColor(R.color.fg))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding((4 * dp).toInt(), 0, 0, 0)
+            text = "$prefix$n"; textSize = 15f; setTextColor(getColor(R.color.fg))
+            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            setPadding(if (icon != null) (5 * dp).toInt() else 0, 0, 0, 0)
         })
+        chip.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            .apply { setMargins((2 * dp).toInt(), 0, (2 * dp).toInt(), 0) }
         onTap?.let { tap -> chip.setOnClickListener { tap() } }
         notifs.addView(chip)
     }

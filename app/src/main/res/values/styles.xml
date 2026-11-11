@@ -4,14 +4,45 @@
         <item name="android:textColor">@color/fg</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:alertDialogTheme">@style/Theme.Dumb.Dialog</item>
     </style>
+
+    <!-- Menus and pop-ups: dark, rounded, same type as the rest of the launcher. -->
+    <style name="Theme.Dumb.Dialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="android:colorBackground">@color/surface</item>
+        <item name="android:textColorPrimary">@color/fg</item>
+        <item name="android:textColorSecondary">@color/dim</item>
+        <item name="android:colorAccent">@color/focus</item>
+        <item name="android:windowTitleStyle">@style/DialogTitle</item>
+    </style>
+    <style name="DialogTitle" parent="android:TextAppearance.Material.DialogWindowTitle">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/fg</item>
+    </style>
+
+    <!-- Screen title at the top of All apps / Settings / icon picker. -->
+    <style name="ScreenTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingHorizontal">@dimen/space_l</item>
+        <item name="android:paddingTop">@dimen/space_m</item>
+        <item name="android:paddingBottom">@dimen/space_s</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/fg</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
     <style name="Hint">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@color/bar</item>
-        <item name="android:textColor">@color/fg</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:padding">10dp</item>
+        <item name="android:textColor">@color/dim</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:padding">@dimen/space_m</item>
         <item name="android:gravity">center</item>
         <item name="android:visibility">gone</item>
     </style>

@@ -3,7 +3,6 @@ package com.plaintextlab.dumblauncher
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.widget.AbsListView
 import android.widget.AdapterView
@@ -40,7 +39,7 @@ object Ui {
         }
         val colour = Prefs.getInt(v.context, Prefs.HIGHLIGHT, COLOURS[0].second)
         if (selected) {
-            val bg = ColorDrawable(colour)
+            val bg = highlight(v, colour)
             v.background = bg
             if (animate) Anim.fadeIn(bg, v.context)
         } else {
@@ -51,6 +50,15 @@ object Ui {
         v.findViewById<android.widget.ImageView>(R.id.sicon)?.setColorFilter(text)
         v.findViewById<TextView>(R.id.value)?.setTextColor(
             if (selected) text else v.context.getColor(R.color.dim))
+    }
+
+    /** The selection: a rounded tile in the highlight colour, inset a little from the edges. */
+    private fun highlight(v: View, colour: Int): android.graphics.drawable.Drawable {
+        val dp = v.resources.displayMetrics.density
+        val tile = android.graphics.drawable.GradientDrawable().apply {
+            setColor(colour); cornerRadius = 14 * dp
+        }
+        return android.graphics.drawable.InsetDrawable(tile, (4 * dp).toInt(), (2 * dp).toInt(), (4 * dp).toInt(), (2 * dp).toInt())
     }
 
     /** Black text on light colours, white on dark ones. */

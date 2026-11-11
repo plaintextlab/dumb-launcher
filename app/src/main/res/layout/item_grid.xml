@@ -3,13 +3,13 @@
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:orientation="vertical" android:gravity="center"
     android:clipChildren="false"
- android:padding="8dp">
+ android:paddingHorizontal="@dimen/space_xs" android:paddingVertical="@dimen/space_m">
 
-    <ImageView android:id="@+id/icon" android:layout_width="56dp" android:layout_height="56dp" />
+    <ImageView android:id="@+id/icon" android:layout_width="52dp" android:layout_height="52dp" />
 
     <TextView
         android:id="@+id/label"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" android:gravity="center"
-        android:maxLines="1" android:ellipsize="end" android:textSize="15sp" />
+        android:layout_marginTop="@dimen/space_s" android:gravity="center"
+        android:maxLines="1" android:ellipsize="end" android:textSize="13sp" />
 </LinearLayout>

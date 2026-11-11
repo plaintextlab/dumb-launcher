@@ -3,7 +3,6 @@ package com.plaintextlab.dumblauncher
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
@@ -39,7 +38,7 @@ object Anim {
     }
 
     /** Fade the highlight colour in instead of snapping. */
-    fun fadeIn(bg: ColorDrawable, c: Context) {
+    fun fadeIn(bg: android.graphics.drawable.Drawable, c: Context) {
         if (!on(c)) return
         bg.alpha = 0
         ValueAnimator.ofInt(0, 255).apply {
