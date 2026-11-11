@@ -28,7 +28,7 @@ The selected icon zooms in, Nokia style.
 | Hide notification bar | On / Off (swipe down to peek) |
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons; hidden while the music widget shows) |
 | Show notifications on Home | On / Off |
-| Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next |
+| Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · hold ▲ (or tap) open the player · Back hides it until the next song or until playback resumes |
 | Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
 | Highlight colour | 10 colours |
 | Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |

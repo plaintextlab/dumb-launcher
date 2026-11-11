@@ -33,6 +33,7 @@ class HomeActivity : BaseActivity() {
         findViewById<View>(R.id.musicPrev).setOnClickListener { Music.previous(this); refreshMusicSoon() }
         findViewById<View>(R.id.musicPlay).setOnClickListener { Music.playPause(this); refreshMusicSoon() }
         findViewById<View>(R.id.musicNext).setOnClickListener { Music.next(this); refreshMusicSoon() }
+        findViewById<View>(R.id.music).setOnClickListener { Music.open(this) }
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isNotEmpty()) requestPermissions(needed.toTypedArray(), 1)
@@ -183,7 +184,7 @@ class HomeActivity : BaseActivity() {
         if (Keys.isCall(code)) {
             Apps.start(this, Intent(Intent.ACTION_VIEW).setType(CallLog.Calls.CONTENT_TYPE)); return true
         }
-        if (code == KeyEvent.KEYCODE_BACK) return true // nothing to go back to
+        if (code == KeyEvent.KEYCODE_BACK) { event.startTracking(); return true } // Back hides the music widget
         return super.onKeyDown(code, event)
     }
 
@@ -193,6 +194,7 @@ class HomeActivity : BaseActivity() {
                 KeyEvent.KEYCODE_DPAD_LEFT -> { Music.previous(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> { Music.next(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_DOWN -> { Music.playPause(this); refreshMusicSoon(); return true }
+                KeyEvent.KEYCODE_DPAD_UP -> { Music.open(this); return true }
             }
         }
         when {
@@ -207,7 +209,7 @@ class HomeActivity : BaseActivity() {
         when {
             Keys.isOk(code) -> { if (shortPress) startActivity(Intent(this, AppsActivity::class.java)) }
             Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
-            code == KeyEvent.KEYCODE_BACK -> {}
+            code == KeyEvent.KEYCODE_BACK -> { if (shortPress) hideMusic() }
             else -> return super.onKeyUp(code, event)
         }
         return true
@@ -228,10 +230,18 @@ class HomeActivity : BaseActivity() {
         override fun run() { refreshMusic(); ticker.postDelayed(this, 1000) }
     }
 
+    private var shownMusic: Music.Now? = null
+
+    /** Back: hide the widget until another song plays (the music keeps going). */
+    private fun hideMusic() {
+        shownMusic?.let { Music.hide(it); refreshMusic() }
+    }
+
     private fun refreshMusicSoon() = ticker.postDelayed({ refreshMusic() }, 350)
 
     private fun refreshMusic() {
-        val now = if (Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.now(this) else null
+        val now = if (Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.visible(Music.now(this)) else null
+        shownMusic = now
         musicView.visibility = if (now == null) View.GONE else View.VISIBLE
         updateDpadVisibility()
         if (now == null) return
