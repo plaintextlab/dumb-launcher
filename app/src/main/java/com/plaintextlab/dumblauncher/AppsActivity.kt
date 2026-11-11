@@ -98,6 +98,12 @@ class AppsActivity : BaseActivity() {
         }
         items += "Change icon" to { Icons.change(this, e) }
         items += "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() }
+        items += "Hide from launcher" to {
+            Prefs.setHidden(this, e.target, true)
+            all = all.filter { it.target != e.target }; filter()
+            Bg.run({ AppList.refresh(this) })
+            android.widget.Toast.makeText(this, "${e.label} hidden. Undo in Settings > Hidden apps", android.widget.Toast.LENGTH_LONG).show()
+        }
         if (extra) items += "Remove from drawer" to { Shortcuts.removeFromDrawer(this, e.target); reload() }
         else items += "App info" to {
             Apps.start(this, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))

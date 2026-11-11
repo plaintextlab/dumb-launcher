@@ -36,6 +36,12 @@ object Prefs {
     fun get(c: Context, key: String): String? = sp(c).getString(key, null)?.takeIf { it.isNotEmpty() }
     fun set(c: Context, key: String, value: String?) = sp(c).edit().putString(key, value ?: "").apply()
 
+    // ---- apps hidden from the drawer, search and the automatic dock ----
+    private const val HIDDEN = "hidden_apps"
+    fun hidden(c: Context): Set<String> = get(c, HIDDEN)?.split('\n')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
+    fun setHidden(c: Context, target: String, hide: Boolean) =
+        set(c, HIDDEN, (if (hide) hidden(c) + target else hidden(c) - target).joinToString("\n"))
+
     fun getInt(c: Context, key: String, def: Int) = sp(c).getInt(key, def)
     fun setInt(c: Context, key: String, value: Int) = sp(c).edit().putInt(key, value).apply()
 

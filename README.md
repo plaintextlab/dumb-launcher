@@ -39,6 +39,7 @@ The selected icon zooms in, Nokia style.
 | Dock on Home (keys 1-5) | On / Off. Bottom row showing the apps on keys 1-5 |
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |
 | Forget most-used history | resets the automatic dock |
+| Hidden apps | apps hidden with hold ● → *Hide from launcher*; pick one to show it again |
 | Number key shortcuts (0-9) | pick an app, shortcut or activity for each digit |
 | App drawer layout | Grid / List |
 | Key tester, Default launcher, Phone settings | |

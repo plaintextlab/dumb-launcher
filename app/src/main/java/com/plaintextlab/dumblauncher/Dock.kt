@@ -43,8 +43,9 @@ object Dock {
     fun slots(c: Context): List<Slot> {
         val pinned = KEYS.associateWith { Prefs.get(c, Prefs.num(it)) }
         val taken = pinned.values.filterNotNull().toMutableSet()
+        val hidden = Prefs.hidden(c)
         val candidates = (Usage.ranked(c) + defaults(c))
-            .filter { it != Prefs.SPECIAL_APPS }
+            .filter { it != Prefs.SPECIAL_APPS && it !in hidden }
             .distinct()
             .iterator()
         return KEYS.map { k ->

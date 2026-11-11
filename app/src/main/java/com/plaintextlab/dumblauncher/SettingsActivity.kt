@@ -33,6 +33,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Number key") -> R.drawable.s_dialpad
             title.startsWith("Dock") -> R.drawable.s_grid
             title.startsWith("Forget") -> R.drawable.s_refresh
+            title.startsWith("Hidden") -> R.drawable.s_eye_off
             title.startsWith("Music") -> R.drawable.ic_music
             title.contains("otification") -> R.drawable.s_bell
             title.startsWith("Highlight") -> R.drawable.s_palette
@@ -148,6 +149,14 @@ class SettingsActivity : BaseActivity() {
         Row("Forget most-used history", action = {
             Usage.clear(this); refresh(); Toast.makeText(this, "Most-used history cleared", Toast.LENGTH_SHORT).show()
         }),
+        Row("Hidden apps", { Prefs.hidden(this).size.let { if (it == 0) "None" else "$it hidden" } }) {
+            val hidden = Prefs.hidden(this).map { t -> t to (Apps.entry(this, t)?.label ?: t.substringBefore('/')) }
+                .sortedBy { it.second.lowercase() }
+            if (hidden.isEmpty()) Toast.makeText(this, "No hidden apps", Toast.LENGTH_SHORT).show()
+            else Ui.choose(this, "Show again", hidden.map { (t, label) ->
+                label to { Prefs.setHidden(this, t, false); Bg.run({ AppList.refresh(this) }); refresh() }
+            })
+        },
         Row("Number key shortcuts (0-9)", { "${(0..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 10 set" }) {
             Ui.choose(this, "Number key shortcuts", (0..9).map { n ->
                 "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label

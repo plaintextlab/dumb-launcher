@@ -36,11 +36,12 @@ object Apps {
         val pm = c.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val home = ComponentName(c, HomeActivity::class.java)
+        val hidden = Prefs.hidden(c)
         return pm.queryIntentActivities(intent, 0)
             .map { ComponentName(it.activityInfo.packageName, it.activityInfo.name) to it }
-            .filter { it.first != home }
+            .filter { it.first != home && it.first.flattenToString() !in hidden }
             .map { (cn, ri) -> AppEntry(cn.flattenToString(), ri.loadLabel(pm).toString(), null) } // icons load later
-            .plus(Shortcuts.drawerExtras(c).mapNotNull { Shortcuts.entry(c, it) })
+            .plus(Shortcuts.drawerExtras(c).filter { it !in hidden }.mapNotNull { Shortcuts.entry(c, it) })
             .sortedBy { it.label.lowercase() }
     }
 
