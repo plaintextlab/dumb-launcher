@@ -29,7 +29,8 @@ object StartTiles {
     const val WEATHER = "weather"
     const val PHOTOS = "photos"
     const val MUSIC = "music"
-    val LIVE = listOf(CLOCK, CALENDAR, WEATHER, PHOTOS, MUSIC)
+    const val PEOPLE = "people"
+    val LIVE = listOf(CLOCK, CALENDAR, WEATHER, PHOTOS, MUSIC, PEOPLE)
 
     /** "See-through" colour choice: lets the wallpaper show, like transparent tiles. */
     const val GLASS = 0x38FFFFFF
@@ -46,8 +47,12 @@ object StartTiles {
                 }.toMutableList()
             } catch (e: Exception) { /* fall through to the default layout */ }
         }
-        return defaults(c)
+        // Saved straight away: Start only changes when the user changes it.
+        return defaults(c).also { save(c, it) }
     }
+
+    /** What a live tile opens when tapped, if the user chose an app (else the usual one). */
+    fun openKey(id: String) = "tile_open_$id"
 
     fun save(c: Context, tiles: List<Spec>) {
         val arr = JSONArray()
@@ -55,16 +60,20 @@ object StartTiles {
         Prefs.set(c, KEY, arr.toString())
     }
 
-    /** The layout Start used to build on its own: live tiles, keys 1-4 medium, 5-9 and 0 small. */
+    /**
+     * The first layout: live tiles, the number-key apps the user set (1-4 medium, 5-9 small),
+     * else the phone's own Phone, Messages, Contacts… Never the "most used" apps, which shift.
+     */
     private fun defaults(c: Context): MutableList<Spec> {
         val out = mutableListOf(Spec(CLOCK, Size.MEDIUM), Spec(CALENDAR, Size.MEDIUM))
-        val dock = if (Dock.enabled(c)) Dock.slots(c).associate { it.key to it.entry?.target } else emptyMap()
-        val keys = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0).mapNotNull { n ->
-            (dock[n] ?: Prefs.get(c, Prefs.num(n)))?.let { n to it }
+        val set = (1..9).mapNotNull { n -> Prefs.get(c, Prefs.num(n))?.let { n to it } }
+        val keys = set.ifEmpty {
+            Apps.defaultSlots(c).filterNotNull().filter { it != Prefs.SPECIAL_APPS }.take(9).mapIndexed { i, t -> i + 1 to t }
         }
         keys.firstOrNull()?.let { (_, t) -> out += Spec(APP + t, Size.MEDIUM) }
         if (Weather.enabled(c)) out += Spec(WEATHER, Size.MEDIUM)
         if (Photos.enabled(c)) out += Spec(PHOTOS, Size.WIDE)
+        out += Spec(PEOPLE, Size.MEDIUM)
         out += Spec(MUSIC, Size.WIDE)
         keys.drop(1).forEach { (n, t) -> out += Spec(APP + t, if (n in 1..4) Size.MEDIUM else Size.SMALL) }
         return out.distinctBy { it.id }.toMutableList()
@@ -91,12 +100,12 @@ object StartTiles {
 
     /** Sizes that make sense for a tile (live tiles need room for their content). */
     fun sizesFor(id: String) = when (id) {
-        PHOTOS, MUSIC -> listOf(Size.MEDIUM, Size.WIDE, Size.LARGE)
+        PHOTOS, MUSIC, PEOPLE -> listOf(Size.MEDIUM, Size.WIDE, Size.LARGE)
         else -> Size.values().toList()
     }
 
     fun liveName(id: String) = when (id) {
-        CLOCK -> "Clock"; CALENDAR -> "Calendar"; WEATHER -> "Weather"; PHOTOS -> "Photos"; MUSIC -> "Music"; else -> id
+        CLOCK -> "Clock"; CALENDAR -> "Calendar"; WEATHER -> "Weather"; PHOTOS -> "Photos"; MUSIC -> "Music"; PEOPLE -> "People"; else -> id
     }
 
     /** Move the tile at [from] to [to] (indexes in the list). */

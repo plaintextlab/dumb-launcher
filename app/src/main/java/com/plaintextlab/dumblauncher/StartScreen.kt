@@ -50,28 +50,29 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     // Live tiles currently on screen (with their size), updated by the clock tick and data loads.
     private val live = HashMap<String, Pair<FrameLayout, Size>>()
 
+    private lateinit var grid: FrameLayout
+
     fun build(counts: Map<String, Int>, animate: Boolean = true) {
         this.counts = counts
+        if (dragFrom >= 0) return          // not while a tile is being dragged; rebuilt when it lands
         specs = StartTiles.load(a)
         column.removeAllViews(); rows.clear(); tileViews.clear(); live.clear()
         val width = a.resources.displayMetrics.widthPixels - column.paddingLeft - column.paddingRight
         u = (width - 5 * gap) / 6
 
-        val grid = FrameLayout(a).apply { clipChildren = false }
-        val taken = ArrayList<BooleanArray>()
-        var bottom = 0
+        grid = FrameLayout(a).apply { clipChildren = false }
+        val (cells, bottom) = pack(specs)
         val keys = keyNumbers()
         specs.forEachIndexed { i, s ->
-            val (x, y) = place(taken, s.size)
+            val (x, y) = cells[i]
             val v = tile(s, i, keys)
             grid.addView(v, FrameLayout.LayoutParams(span(s.size.w), span(s.size.h)).apply {
                 leftMargin = x * (u + gap); topMargin = y * (u + gap)
             })
             tileViews += v; rows += v
-            bottom = maxOf(bottom, y + s.size.h)
         }
         grid.setOnDragListener(dropHandler)
-        column.addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, maxOf(0, bottom * (u + gap) - gap)))
+        column.addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height(bottom)))
 
         val all = TextView(a).apply {
             text = "all apps  ›"; textSize = 18f; setTextColor(a.getColor(R.color.fg))
@@ -83,10 +84,19 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         column.addView(all, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             .apply { topMargin = gap })
         rows += all
-        if (animate) Turnstile.featherIn(grid) else grid.layoutAnimation = null
+        if (animate) Turnstile.featherIn(column) { rows.toList() }
     }
 
     private fun span(n: Int) = n * u + (n - 1) * gap
+    private fun height(bottom: Int) = maxOf(0, bottom * (u + gap) - gap)
+
+    /** Where each tile of [list] goes (in small squares), and how many rows that takes. */
+    private fun pack(list: List<Spec>): Pair<List<Pair<Int, Int>>, Int> {
+        val taken = ArrayList<BooleanArray>()
+        var bottom = 0
+        val cells = list.map { s -> place(taken, s.size).also { (_, y) -> bottom = maxOf(bottom, y + s.size.h) } }
+        return cells to bottom
+    }
 
     /** First free spot for [size], row by row; medium and bigger tiles sit on the 2-square grid. */
     private fun place(taken: ArrayList<BooleanArray>, size: Size): Pair<Int, Int> {
@@ -114,11 +124,10 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         for (r in y until y + s.h) for (c in x until x + s.w) t[r][c] = true
     }
 
-    /** Which number key opens each app, to show it in the tile's corner. */
+    /** Which number key opens each app (only keys the user set; 0 is All apps), for the tile's corner. */
     private fun keyNumbers(): Map<String, Int> {
         val out = HashMap<String, Int>()
-        val dock = if (Dock.enabled(a)) Dock.slots(a).associate { it.key to it.entry?.target } else emptyMap()
-        for (n in 0..9) (dock[n] ?: Prefs.get(a, Prefs.num(n)))?.let { out.putIfAbsent(it, n) }
+        for (n in 1..9) Prefs.get(a, Prefs.num(n))?.let { out.putIfAbsent(it, n) }
         return out
     }
 
@@ -239,8 +248,40 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
                     corner(Gravity.BOTTOM or Gravity.START, size))
             }
             StartTiles.MUSIC -> fillMusic(t, size)
+            StartTiles.PEOPLE -> fillPeople(t, size)
         }
     }
+
+    private var faces: List<People.Face> = emptyList()
+    private var faceCells: MutableList<ImageView> = mutableListOf()
+    private var faceNext = 0
+
+    /** People: contact photos tiled 3 high (3x3 on a square tile, 6x3 on a wide one). */
+    private fun fillPeople(t: FrameLayout, size: Size) {
+        faceCells = mutableListOf()
+        if (faces.isEmpty()) {
+            val g = (span(2) * 0.4f).toInt()
+            t.addView(ImageView(a).apply { setImageResource(R.drawable.s_contacts) }, FrameLayout.LayoutParams(g, g, Gravity.CENTER))
+            t.addView(text(if (People.hasPermission(a)) "People" else "People · allow contacts", 13f), corner(Gravity.BOTTOM or Gravity.START, size))
+            return
+        }
+        val rowsN = 3
+        val cols = if (size == Size.WIDE) 6 else 3
+        val cw = span(size.w) / cols.toFloat(); val ch = span(size.h) / rowsN.toFloat()
+        for (r in 0 until rowsN) for (c in 0 until cols) {
+            val iv = ImageView(a).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setImageBitmap(faces[(r * cols + c) % faces.size].photo)
+            }
+            t.addView(iv, FrameLayout.LayoutParams(Math.round((c + 1) * cw) - Math.round(c * cw), Math.round((r + 1) * ch) - Math.round(r * ch))
+                .apply { leftMargin = Math.round(c * cw); topMargin = Math.round(r * ch) })
+            faceCells += iv
+        }
+        faceNext = faceCells.size
+        if (size != Size.SMALL) t.addView(text("People", 13f), corner(Gravity.BOTTOM or Gravity.START, size))
+    }
+
+    fun people(list: List<People.Face>) { faces = list; fillLive(StartTiles.PEOPLE) }
 
     private fun fillWeather(t: FrameLayout, size: Size) {
         val w = weather
@@ -276,22 +317,47 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
             t.addView(text("Music", 13f), corner(Gravity.BOTTOM or Gravity.START, size))
             return
         }
+        // The album art: filling the tile (medium, large) or as a square on the right (wide).
         val h = span(size.h)
-        val medium = size == Size.MEDIUM
+        val wide = size == Size.WIDE
         val art = ImageView(a).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            if (now.art != null) setImageBitmap(now.art) else setImageResource(R.drawable.ic_music)
-            if (medium) alpha = 0.5f            // medium: art behind the text
+            if (now.art != null) setImageBitmap(now.art) else {
+                setImageResource(R.drawable.ic_music); scaleType = ImageView.ScaleType.CENTER_INSIDE
+            }
         }
-        t.addView(art, FrameLayout.LayoutParams(if (medium) ViewGroup.LayoutParams.MATCH_PARENT else h,
+        t.addView(art, FrameLayout.LayoutParams(if (wide) h else ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT, Gravity.END))
+        if (!wide) t.addView(View(a).apply {   // darken the bottom so the words and buttons read over the art
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(0x00000000, 0xB0000000.toInt()))
+        }, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+
         val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL }
-        col.addView(text(if (now.playing) "Now playing" else "Paused", 12f).apply { alpha = 0.85f })
-        col.addView(text(now.title, 18f, true))
-        if (now.artist.isNotEmpty()) col.addView(text(now.artist, 13f))
-        val w = (if (medium) span(2) else span(size.w) - h) - (12 * dp).toInt()
+        if (size != Size.MEDIUM) col.addView(text(if (now.playing) "Now playing" else "Paused", 12f).apply { alpha = 0.85f })
+        col.addView(text(now.title, if (size == Size.MEDIUM) 14f else 18f, true))
+        if (now.artist.isNotEmpty() && size != Size.MEDIUM) col.addView(text(now.artist, 13f))
+        col.addView(controls(now, if (size == Size.MEDIUM) 30 else 36))
+        val w = (if (wide) span(size.w) - h else span(size.w)) - (12 * dp).toInt()
         t.addView(col, FrameLayout.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.START)
-            .apply { setMargins((8 * dp).toInt(), 0, 0, (8 * dp).toInt()) })
+            .apply { setMargins((6 * dp).toInt(), 0, 0, (4 * dp).toInt()) })
+    }
+
+    /** ⏮ ⏯ ⏭ by touch. (With keys: hold OK on the tile for the same in its menu.) */
+    private fun controls(now: Music.Now, sizeDp: Int) = LinearLayout(a).apply {
+        orientation = LinearLayout.HORIZONTAL
+        val px = (sizeDp * dp).toInt()
+        listOf(
+            R.drawable.ic_prev to { Music.previous(a) },
+            (if (now.playing) R.drawable.ic_pause else R.drawable.ic_play) to { Music.playPause(a) },
+            R.drawable.ic_next to { Music.next(a) },
+        ).forEach { (icon, act) ->
+            addView(ImageView(a).apply {
+                setImageResource(icon); setColorFilter(Color.WHITE)
+                val p = (px * 0.2f).toInt(); setPadding(p, p, p, p)
+                isFocusable = false
+                setOnClickListener { Turnstile.press(this); act(); music = null }   // re-read on the next tick
+            }, LinearLayout.LayoutParams(px, px))
+        }
     }
 
     fun weather(now: Weather.Now?) { weather = now; fillLive(StartTiles.WEATHER) }
@@ -311,6 +377,12 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         live[StartTiles.CALENDAR]?.let { (t, s) -> if (s != Size.SMALL && ticks % 8 == 0) Turnstile.flip(t) { dateFace = 1 - dateFace; fillLive(StartTiles.CALENDAR) } }
         live[StartTiles.PHOTOS]?.let { (t, _) -> if (ticks % 6 == 3 && photos.size > 1) Turnstile.flip(t) { photoIndex++; fillLive(StartTiles.PHOTOS) } }
         live[StartTiles.WEATHER]?.let { (t, s) -> if (s == Size.MEDIUM && ticks % 10 == 5 && weather != null) Turnstile.flip(t) { weatherFace = 1 - weatherFace; fillLive(StartTiles.WEATHER) } }
+        // People: one photo at a time flips to another contact.
+        if (live.containsKey(StartTiles.PEOPLE) && ticks % 3 == 1 && faces.size > faceCells.size && faceCells.isNotEmpty()) {
+            val cell = faceCells[(ticks / 3 * 5) % faceCells.size]
+            val face = faces[faceNext++ % faces.size]
+            Turnstile.flip(cell) { cell.setImageBitmap(face.photo) }
+        }
     }
 
     // ---- Selection (keys) ----
@@ -340,36 +412,118 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
 
     // ---- Rearranging ----
 
-    /** Touch: hold a tile, drag it onto another tile's place, let go. Letting go where it was opens its menu. */
+    /*
+     * Touch: hold a tile and drag. While it moves, the other tiles slide out of its way to show
+     * where it will land (the faded tile marks the spot). Let go to drop it there. Holding
+     * without moving opens its menu instead.
+     */
+    private var dragFrom = -1          // index in specs of the tile being dragged, or -1
+    private var dragTo = -1            // where it would land now
+    private var dragMoved = false
+    private var pending = -1           // a new landing spot the finger is resting on
+    private var targets: List<Rect> = emptyList()   // each tile's place in the current preview (by spec index)
+    private val dwell = android.os.Handler(android.os.Looper.getMainLooper())
+
     private fun startDrag(v: View, index: Int) {
-        if (v.startDragAndDrop(ClipData.newPlainText("tile", "$index"), View.DragShadowBuilder(v), index, 0)) v.alpha = 0.4f
-        else menu(index)
+        dragFrom = index; dragTo = index; dragMoved = false; pending = -1
+        targets = rectsFor(order(index, index))
+        if (v.startDragAndDrop(ClipData.newPlainText("tile", "$index"), View.DragShadowBuilder(v), index, 0)) {
+            v.animate().alpha(0.3f).setDuration(150).start()
+        } else { dragFrom = -1; menu(index) }
     }
 
-    private val dropHandler = View.OnDragListener { grid, e ->
-        val from = e.localState as? Int ?: return@OnDragListener false
+    /** Spec indexes in the order they would be with [from] moved to [to]. */
+    private fun order(from: Int, to: Int) = specs.indices.toMutableList().also { o -> o.add(to, o.removeAt(from)) }
+
+    /** Each tile's rectangle (by spec index) when laid out in [order]. */
+    private fun rectsFor(order: List<Int>): List<Rect> {
+        val (cells, _) = pack(order.map { specs[it] })
+        val out = arrayOfNulls<Rect>(specs.size)
+        order.forEachIndexed { pos, i ->
+            val (x, y) = cells[pos]; val s = specs[i].size
+            val l = x * (u + gap); val t = y * (u + gap)
+            out[i] = Rect(l, t, l + span(s.w), t + span(s.h))
+        }
+        return out.map { it!! }
+    }
+
+    /** Slide every tile to its place with the dragged tile at [to]. */
+    private fun preview(to: Int) {
+        val o = order(dragFrom, to)
+        targets = rectsFor(o)
+        val (_, bottom) = pack(o.map { specs[it] })
+        grid.layoutParams = grid.layoutParams.apply { height = maxOf(height, height(bottom)) }
+        tileViews.forEachIndexed { i, v ->
+            val lp = v.layoutParams as FrameLayout.LayoutParams
+            Turnstile.slide(v, (targets[i].left - lp.leftMargin).toFloat(), (targets[i].top - lp.topMargin).toFloat())
+        }
+    }
+
+    /** The landing spot under the finger: the position of the tile there, or the end below the last row. */
+    private fun spotAt(x: Int, y: Int): Int? {
+        val o = order(dragFrom, dragTo)
+        targets.forEachIndexed { i, r -> if (r.contains(x, y)) return o.indexOf(i) }
+        if (y > (targets.maxOfOrNull { it.bottom } ?: 0)) return specs.lastIndex
+        return null   // in a gap: stay
+    }
+
+    private val dropHandler = View.OnDragListener { _, e ->
+        if (e.localState !is Int || dragFrom < 0) return@OnDragListener false
         when (e.action) {
-            DragEvent.ACTION_DROP -> {
-                val to = indexAt(e.x.toInt(), e.y.toInt())
-                if (to == null || to == from) grid.post { menu(from) }
-                else { StartTiles.move(specs, from, to); StartTiles.save(a, specs); focusId = specs[to].id; grid.post { rebuild() } }
-                true
+            DragEvent.ACTION_DRAG_LOCATION -> {
+                val spot = spotAt(e.x.toInt(), e.y.toInt())
+                if (spot == null || spot == dragTo) { pending = -1; dwell.removeCallbacksAndMessages(null) }
+                else if (spot != pending) {
+                    // Wait until the finger rests a moment, so tiles don't jump about while passing over them.
+                    pending = spot; dwell.removeCallbacksAndMessages(null)
+                    dwell.postDelayed({ if (dragFrom >= 0 && pending >= 0) { dragTo = pending; dragMoved = true; pending = -1; preview(dragTo) } }, 120)
+                }
             }
-            DragEvent.ACTION_DRAG_ENDED -> { tileViews.getOrNull(from)?.alpha = 1f; true }
-            else -> true
+            DragEvent.ACTION_DROP -> {
+                dwell.removeCallbacksAndMessages(null)
+                if (pending >= 0) { dragTo = pending; dragMoved = true }
+                val from = dragFrom; val to = dragTo; val moved = dragMoved
+                dragFrom = -1
+                if (!moved && to == from) { grid.post { settle(); menu(from) } }
+                else {
+                    StartTiles.move(specs, from, to); StartTiles.save(a, specs); focusId = specs[to].id
+                    grid.post { rebuild() }
+                }
+            }
+            DragEvent.ACTION_DRAG_ENDED -> {
+                dwell.removeCallbacksAndMessages(null)
+                if (dragFrom >= 0) { dragFrom = -1; settle() }    // let go outside Start: put everything back
+            }
         }
+        true
     }
 
-    private fun indexAt(x: Int, y: Int): Int? {
-        val r = Rect()
-        tileViews.forEachIndexed { i, v -> v.getHitRect(r); if (r.contains(x, y)) return i }
-        // Let go in a gap: the nearest tile.
-        return tileViews.indices.minByOrNull { i ->
-            tileViews[i].getHitRect(r); val dx = r.centerX() - x; val dy = r.centerY() - y; dx * dx + dy * dy
+    /** Tiles back to where they are built, fully shown. */
+    private fun settle() = tileViews.forEach { v -> Turnstile.slide(v, 0f, 0f); v.animate().alpha(1f).setDuration(150).start() }
+
+    /**
+     * Rebuild after a change. Tiles glide from where they were drawn to their new places
+     * (new tiles grow in), instead of jumping.
+     */
+    private fun rebuild() {
+        val before = tileViews.associate { v ->
+            val lp = v.layoutParams as FrameLayout.LayoutParams
+            (v.tag as String) to (lp.leftMargin + v.translationX to lp.topMargin + v.translationY)
+        }
+        build(counts, animate = false); restoreFocus()
+        if (!Anim.on(a)) return
+        tileViews.forEach { v ->
+            val lp = v.layoutParams as FrameLayout.LayoutParams
+            val old = before[v.tag as String]
+            if (old == null) {
+                v.scaleX = 0.6f; v.scaleY = 0.6f; v.alpha = 0f
+                v.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(300).setInterpolator(Turnstile.QUINT_OUT).start()
+            } else {
+                v.translationX = old.first - lp.leftMargin; v.translationY = old.second - lp.topMargin
+                if (v.translationX != 0f || v.translationY != 0f) Turnstile.slide(v, 0f, 0f)
+            }
         }
     }
-
-    private fun rebuild() { build(counts, animate = false); restoreFocus() }
 
     /** The menu for the selected tile (hold OK). False if "all apps" or nothing is selected. */
     fun menuForSelected(): Boolean {
@@ -392,15 +546,46 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
             "Colour…" to {
                 val choices = listOf<Pair<String, Int?>>("Automatic" to null, "Accent colour" to Metro.accent(a), "See-through" to StartTiles.GLASS) +
                     Metro.ACCENTS.map { (n, c) -> n to c }
-                Ui.choose(a, "Tile colour", choices.map { (n, c) -> n to { specs[i] = s.copy(colour = c); focusId = s.id; save() } })
+                // "Automatic" shows the colour the tile has on its own (its app's colour, or the default).
+                val auto = if (s.colour == null) (tileViews.getOrNull(i)?.background as? ColorDrawable)?.color ?: defaultColour(s.id)
+                           else defaultColour(s.id)
+                val current = if (s.colour == null) 0 else choices.indexOfFirst { it.second == s.colour }.takeIf { it > 0 } ?: -1
+                Ui.chooseColour(a, "Tile colour", choices.map { (n, c) ->
+                    Triple(n, c ?: auto, { specs[i] = s.copy(colour = c); focusId = s.id; save() })
+                }, current)
             },
             "Unpin from Start" to { specs.removeAt(i); save() },
         )
+        if (s.target == null) items.add(3, "Opens…" to { chooseOpens(s.id) })
+        if (s.id == StartTiles.MUSIC) items.addAll(0, listOf(
+            "Play / pause" to { Music.playPause(a); music = null },
+            "Next song" to { Music.next(a); music = null },
+            "Previous song" to { Music.previous(a); music = null },
+        ))
         val missing = StartTiles.missingLive(a)
         if (missing.isNotEmpty()) items += "Add a live tile…" to {
-            Ui.choose(a, "Add to Start", missing.map { id -> StartTiles.liveName(id) to { StartTiles.addLive(a, id); focusId = id; rebuild() } })
+            Ui.choose(a, "Add to Start", missing.map { id -> StartTiles.liveName(id) to {
+                StartTiles.addLive(a, id); focusId = id; rebuild()
+                if (id == StartTiles.PEOPLE && !People.hasPermission(a)) a.requestPermissions(arrayOf(People.permission), 2)
+            } })
         }
+        items += "Launcher settings" to { a.startActivity(android.content.Intent(a, SettingsActivity::class.java)) }
         Ui.choose(a, name(s), items)
+    }
+
+    /** Which app a live tile opens: the usual one, or one the user picks. */
+    private fun chooseOpens(id: String) {
+        val key = StartTiles.openKey(id)
+        val chosen = Prefs.get(a, key)?.let { Apps.entry(a, it)?.label }
+        val usual = when (id) {
+            StartTiles.WEATHER -> "Refresh the weather"
+            StartTiles.MUSIC -> "The playing app, else the music app"
+            else -> "The phone's ${StartTiles.liveName(id).lowercase()} app"
+        }
+        Ui.choose(a, "${StartTiles.liveName(id)} tile opens", listOf(
+            (if (chosen == null) "● " else "") + usual to { Prefs.set(a, key, null) },
+            (if (chosen != null) "● $chosen  (change…)" else "Choose an app…") to { Ui.pick(a, key, "${StartTiles.liveName(id)} tile opens") },
+        ))
     }
 
     private fun save() { StartTiles.save(a, specs); rebuild() }

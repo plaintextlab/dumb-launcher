@@ -102,6 +102,9 @@ class SettingsActivity : BaseActivity() {
         Row("App drawer layout", { if (Prefs.getBool(this, Prefs.DRAWER_GRID, Icons.style(this) != Icons.METRO)) "Grid" else "List" }) {
             toggle(Prefs.DRAWER_GRID, Icons.style(this) != Icons.METRO)
         },
+        Row("Sort apps", { if (Prefs.getBool(this, Prefs.SORT_USED, false)) "Most used first" else "A to Z" }) {
+            toggle(Prefs.SORT_USED, false)
+        },
         Row("App drawer background", { Look.DRAWER_MODES[Prefs.getInt(this, Prefs.DRAWER_BG, 0)] }) {
             Ui.choose(this, "App drawer background", Look.DRAWER_MODES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.DRAWER_BG, i); refresh() } })
@@ -180,8 +183,8 @@ class SettingsActivity : BaseActivity() {
                 label to { Prefs.setHidden(this, t, false); Bg.run({ AppList.refresh(this) }); refresh() }
             })
         },
-        Row("Number key shortcuts (0-9)", { "${(0..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 10 set" }) {
-            Ui.choose(this, "Number key shortcuts", (0..9).map { n ->
+        Row("Number key shortcuts (1-9; 0 opens All apps)", { "${(1..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 9 set" }) {
+            Ui.choose(this, "Number key shortcuts", (1..9).map { n ->
                 "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label
                     ?: if (n in Dock.KEYS && Dock.enabled(this)) "auto (dock)" else "not set"}" to {
                     Ui.choose(this, "Key $n", listOf(

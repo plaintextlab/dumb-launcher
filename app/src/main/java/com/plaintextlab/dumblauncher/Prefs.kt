@@ -28,6 +28,7 @@ object Prefs {
     const val TILE_COLOURS = "tile_colours"   // true = each app's own colour, false = accent
     const val SHOW_DOCK = "show_dock"
     const val DRAWER_GRID = "drawer_grid"
+    const val SORT_USED = "drawer_sort_used"
 
     fun iconOverride(target: String) = "icon:$target"
 

@@ -55,6 +55,7 @@ class AppsActivity : BaseActivity() {
         Ui.trackHighlight(list)
         Anim.cascade(list)
         if (metroList) searchBox()
+        queryView.setOnClickListener { openKeyboard() }
         // Show the remembered list at once; re-read installed apps in the background.
         AppList.cached?.let { all = it; filter() }
         Bg.run({ AppList.refresh(this) }) { changed ->
@@ -69,19 +70,23 @@ class AppsActivity : BaseActivity() {
     }
 
     private fun filter() {
+        val byUse = Prefs.getBool(this, Prefs.SORT_USED, false)
+        val rank = if (byUse) Usage.ranked(this).withIndex().associate { it.value to it.index } else emptyMap()
         shown = all.filter { it.matches(query) }
-        rows = if (metro && !grid && query.isEmpty()) withLetters(shown) else shown
+            .let { l -> if (byUse) l.sortedBy { rank[it.target] ?: Int.MAX_VALUE } else l }
+        rows = if (metro && !grid && query.isEmpty() && !byUse) withLetters(shown) else shown
+        val q = typed ?: query
         if (metroList) {
             // Search box: the hint (or what you are picking for) until you type, then the digits.
             val hint = intent.getStringExtra(EXTRA_TITLE) ?: "Search apps"
-            queryView.text = if (query.isEmpty()) hint else "$query   (${shown.size})"
+            queryView.text = if (query.isEmpty()) hint else "$q   (${shown.size})"
             queryView.setTextColor(getColor(if (query.isEmpty()) R.color.dim else R.color.fg))
         } else {
             val title = (intent.getStringExtra(EXTRA_TITLE) ?: "apps").lowercase()
-            queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
+            queryView.text = if (query.isEmpty()) title else "$title  ·  $q  (${shown.size})"
         }
         adapter.notifyDataSetChanged()
-        list.requestFocus()
+        if (!input.hasFocus()) list.requestFocus()
         val first = rows.indexOfFirst { it is AppEntry }.coerceAtLeast(0)
         list.setSelection(first)
         // Keep a letter header above the first app visible, instead of scrolling it off the top.
@@ -91,6 +96,69 @@ class AppsActivity : BaseActivity() {
     }
 
     private val metroList get() = metro && !grid
+
+    /** Letters typed on the on-screen keyboard (shown as typed; matched through T9 like the keypad). */
+    private var typed: String? = null
+    private var settingInput = false
+
+    /**
+     * Touch phones: tapping the search box opens the keyboard. It types into this invisible
+     * field; the text is turned into keypad digits so the same search works.
+     */
+    private val input by lazy {
+        android.widget.EditText(this).apply {
+            alpha = 0f; isCursorVisible = false; background = null
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_GO or android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI
+            addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+                override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    if (settingInput) return
+                    val t = s?.toString().orEmpty()
+                    typed = t.ifEmpty { null }
+                    query = T9.encode(t.lowercase())
+                    filter()
+                }
+            })
+            setOnEditorActionListener { _, _, _ -> shown.firstOrNull()?.let { choose(it) }; true }
+        }
+    }
+
+    private fun openKeyboard() {
+        if (input.parent == null) {
+            findViewById<ViewGroup>(android.R.id.content).addView(input, ViewGroup.LayoutParams(1, 1))
+        }
+        settingInput = true; input.setText(typed ?: ""); input.setSelection(input.text.length); settingInput = false
+        input.requestFocus()
+        input.post {
+            (getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+                .showSoftInput(input, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
+    private fun clearTyped() {
+        typed = null
+        if (input.parent != null && input.text.isNotEmpty()) { settingInput = true; input.setText(""); settingInput = false }
+    }
+
+    /** Swipe right goes back to Start, as on a tile phone. */
+    private val swipe by lazy {
+        val minDist = 80 * resources.displayMetrics.density
+        android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vx: Float, vy: Float): Boolean {
+                val s = e1 ?: return false
+                val dx = e2.x - s.x
+                if (pickPref == null && dx > minDist && dx > 2 * Math.abs(e2.y - s.y) && vx > 0) { finish(); return true }
+                return false
+            }
+        })
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        swipe.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
 
     /** The title becomes an outlined search box with a magnifier, as in tile-style app lists. */
     private fun searchBox() {
@@ -149,10 +217,13 @@ class AppsActivity : BaseActivity() {
         else "Pin to Start" to { StartTiles.pin(this, e.target); toast("${e.label} pinned to Start") })
         if (!metro) items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
         items += "Home number key…" to {
-            Ui.choose(this, "Number key", (0..9).map { n ->
+            Ui.choose(this, "Number key", (1..9).map { n ->
                     "$n  ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label ?: "not set"}" to
                         { Prefs.set(this, Prefs.num(n), e.target) }
                 })
+        }
+        items += (if (Prefs.getBool(this, Prefs.SORT_USED, false)) "Sort apps A to Z" else "Sort apps by most used") to {
+            Prefs.setBool(this, Prefs.SORT_USED, !Prefs.getBool(this, Prefs.SORT_USED, false)); filter()
         }
         items += "Rename…" to { rename(e) }
         if (Prefs.customLabel(this, e.target) != null) items += "Reset name" to { setLabel(e, null) }
@@ -207,12 +278,9 @@ class AppsActivity : BaseActivity() {
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
         if (Keys.handleAppKey(this, code, event)) return true
-        Keys.digit(code)?.let { query += it; filter(); return true }
-        if (Keys.isDelete(code) && query.isNotEmpty()) { query = query.dropLast(1); filter(); return true }
-        if (code == KeyEvent.KEYCODE_BACK && query.isNotEmpty()) { query = ""; filter(); return true }
-        if (Keys.isOptions(code) && pickPref == null) {
-            (rows.getOrNull(list.selectedItemPosition) as? AppEntry)?.let { options(it) }; return true
-        }
+        Keys.digit(code)?.let { clearTyped(); query += it; filter(); return true }
+        if (Keys.isDelete(code) && query.isNotEmpty()) { clearTyped(); query = query.dropLast(1); filter(); return true }
+        if (code == KeyEvent.KEYCODE_BACK && query.isNotEmpty()) { clearTyped(); query = ""; filter(); return true }
         return super.onKeyDown(code, event)
     }
 

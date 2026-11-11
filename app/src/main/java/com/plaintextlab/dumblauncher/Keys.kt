@@ -11,11 +11,8 @@ import android.view.KeyEvent
  * Home, Recents and the red End key never reach apps.
  */
 object Keys {
-    /**
-     * ☆ key = F3 (133). Long-press OK works too.
-     * Vendor code 1000 is deliberately NOT used: the phone's * key sends it, and * belongs to the system.
-     */
-    private val OPTIONS = setOf(KeyEvent.KEYCODE_F3, KeyEvent.KEYCODE_MENU)
+    // The ☆ key (F3) is deliberately not used for anything: settings and menus are on "hold OK".
+    // Vendor code 1000 is not used either: the phone's * key sends it, and * belongs to the system.
 
     /** 👤 key = F1, ✉ key = F2, 📷 key = CAMERA. */
     private const val CONTACTS = KeyEvent.KEYCODE_F1
@@ -26,7 +23,6 @@ object Keys {
 
     private val OK = setOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)
 
-    fun isOptions(code: Int) = code in OPTIONS
     fun isDelete(code: Int) = code in DELETE
     fun isOk(code: Int) = code in OK
     fun isCall(code: Int) = code == KeyEvent.KEYCODE_CALL

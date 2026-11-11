@@ -21,7 +21,7 @@ object Anim {
     /** Menu cells pop in one after another; list rows slide up in a cascade. */
     fun cascade(list: AbsListView) {
         if (!on(list.context)) return
-        if (Icons.style(list.context) == Icons.METRO) { Turnstile.featherIn(list); return }
+        if (Icons.style(list.context) == Icons.METRO) { Turnstile.featherIn(list) { (0 until list.childCount).map { list.getChildAt(it) } }; return }
         val res = if (list is GridView) R.anim.grid_cascade else R.anim.list_cascade
         list.layoutAnimation = AnimationUtils.loadLayoutAnimation(list.context, res)
     }

@@ -25,7 +25,7 @@ class HomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         notifs = findViewById(R.id.notifs)
-        findViewById<TextView>(R.id.hint).text = "● Apps    0-9 Shortcuts    hold ● Settings"
+        findViewById<TextView>(R.id.hint).text = "● Apps    1-9 Shortcuts    0 Apps    hold ● Settings"
         // The buttons also work by touch.
         listOf(R.id.musicPrev, R.id.musicPlay, R.id.musicNext).forEach {
             findViewById<View>(it).apply { isFocusable = false; isFocusableInTouchMode = false }
@@ -43,7 +43,8 @@ class HomeActivity : BaseActivity() {
         // Location and photos only for the Weather and Photos live tiles, and only if they are on.
         val tiles = if (!metro) emptyList() else listOfNotNull(
             Manifest.permission.ACCESS_COARSE_LOCATION.takeIf { Weather.enabled(this) },
-            Photos.permission.takeIf { Photos.enabled(this) })
+            Photos.permission.takeIf { Photos.enabled(this) },
+            People.permission.takeIf { StartTiles.load(this).any { it.id == StartTiles.PEOPLE } })
         val needed = (listOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS) + tiles)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isNotEmpty()) requestPermissions(needed.toTypedArray(), 1)
@@ -112,6 +113,10 @@ class HomeActivity : BaseActivity() {
                 runOnUiThread { start.photos(thumbs) }
             }.start()
         }
+        if (People.hasPermission(this)) Thread {
+            val faces = People.faces(app, 27)
+            runOnUiThread { start.people(faces) }
+        }.start()
     }
 
     private fun packageOf(i: Intent) = packageManager.resolveActivity(i, 0)?.activityInfo?.packageName
@@ -119,8 +124,16 @@ class HomeActivity : BaseActivity() {
     /** A tile was tapped (or its key pressed): swing the tiles out, then open it. */
     private fun onTile(id: String) {
         val toast = { s: String -> android.widget.Toast.makeText(this, s, android.widget.Toast.LENGTH_SHORT).show() }
+        // A live tile the user set to open a chosen app.
+        if (id in StartTiles.LIVE) Prefs.get(this, StartTiles.openKey(id))?.let { t ->
+            leave { if (!Apps.launch(this, t)) toast("Can't open that app") }; return
+        }
         when (id) {
             StartScreen.ALL_APPS -> openDrawer()
+            StartTiles.PEOPLE -> leave {
+                Apps.start(this, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CONTACTS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
             StartTiles.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) toast("No clock app found") }
             StartTiles.CALENDAR -> leave { if (!Apps.launch(this, Apps.calendar(this))) toast("No calendar app found") }
             StartTiles.WEATHER -> { toast("Updating weather…"); loadLiveTiles(forceWeather = true) }
@@ -284,10 +297,9 @@ class HomeActivity : BaseActivity() {
         if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
         Keys.digit(code)?.let { n ->
-            openNumber(n)
+            if (n == 0) openDrawer() else openNumber(n)   // 0 = All apps
             return true
         }
-        if (Keys.isOptions(code)) { options(); return true }
         if (Keys.isCall(code)) {
             openCallLog(); return true
         }
@@ -305,7 +317,7 @@ class HomeActivity : BaseActivity() {
             }
         }
         when {
-            // Metro: hold OK on a tile = its menu (move, resize, colour, unpin). Settings is on ☆.
+            // Metro: hold OK on a tile = its menu (move, resize, colour, unpin, settings); elsewhere Settings.
             Keys.isOk(code) -> if (!(metro && start.menuForSelected())) options()
             else -> return super.onKeyLongPress(code, event)
         }
@@ -360,22 +372,42 @@ class HomeActivity : BaseActivity() {
 
     /** Number key [n] (or its dock icon): open its app, or pick one if the key is empty. */
     private fun openNumber(n: Int) {
-        val target = if (n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
+        val target = if (!metro && n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
         if (target == null) { Ui.pick(this, Prefs.num(n), "Pick app for key $n"); return }
         leave { if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n") }
     }
 
-    /** Swipe up anywhere on Home opens All apps. */
+    /**
+     * Swipes on Home: left → All apps (as on a tile phone), down → the notification shade,
+     * up → All apps. On a Start screen taller than the display, up and down scroll it first:
+     * they only count at the bottom (up) or the top (down).
+     */
     private val swipe by lazy {
         val minDist = 80 * resources.displayMetrics.density
         android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vx: Float, vy: Float): Boolean {
-                val start = e1 ?: return false
-                val dy = start.y - e2.y
-                if (dy > minDist && dy > 2 * Math.abs(e2.x - start.x) && vy < 0) { openDrawer(); return true }
-                return false
+                val s = e1 ?: return false
+                val dx = e2.x - s.x
+                val dy = e2.y - s.y
+                val scroll = if (metro) findViewById<View>(R.id.startScroll) else null
+                when {
+                    -dx > minDist && -dx > 2 * Math.abs(dy) && vx < 0 -> openDrawer()
+                    dy > minDist && dy > 2 * Math.abs(dx) && vy > 0 && scroll?.canScrollVertically(-1) != true -> expandShade()
+                    -dy > minDist && -dy > 2 * Math.abs(dx) && vy < 0 && scroll?.canScrollVertically(1) != true -> openDrawer()
+                    else -> return false
+                }
+                return true
             }
         })
+    }
+
+    /** Pull down the notification shade (needs only the normal EXPAND_STATUS_BAR permission). */
+    @android.annotation.SuppressLint("WrongConstant")
+    private fun expandShade() {
+        try {
+            val sb = getSystemService("statusbar") ?: return
+            sb.javaClass.getMethod("expandNotificationsPanel").invoke(sb)
+        } catch (e: Exception) { /* not available on this phone */ }
     }
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {

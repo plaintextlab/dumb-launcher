@@ -7,9 +7,9 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Start** (Metro style, the default): your pinned tiles: apps, Clock, Calendar, Weather, Photos, Music | ▲▼◀▶ select a tile · ● OK opens it · hold ● → tile menu (Move, Resize, Colour, Unpin, Add a live tile) · in Move: ◀▶ ▲▼ move, ● done · 0-9 → your number-key apps · ☆ → Settings · touch: hold a tile and drag it to rearrange, hold without moving for its menu · swipe up → All apps |
-| **Home** (other icon styles): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up → All apps, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
-| **All apps**: A–Z grid (or list) | just type on the keypad to search (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search · hold ● → options |
+| **Start** (Metro style, the default): your own tiles: apps, Clock, Calendar, Weather, Photos, Music (album art with ⏮ ⏯ ⏭), People (contact photos, 3×3). Nothing is added or reordered on its own | ▲▼◀▶ select a tile · ● OK opens it · hold ● → tile menu (Move, Resize, Colour with previews, Opens… for live tiles, Unpin, Add a live tile, music controls, Launcher settings) · in Move: ◀▶ ▲▼ move, ● done · 1-9 → your number-key apps · 0 → All apps · touch: hold a tile and drag (the others slide out of the way), hold without moving for its menu · swipe left → All apps · swipe down → notifications · swipe up at the bottom → All apps |
+| **Home** (other icon styles): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK or 0 → All apps · 1-9 → your number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up or left → All apps, swipe down → notifications, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
+| **All apps**: A–Z or most used first (hold ● → Sort, or Settings), grid or list | just type on the keypad to search (T9: 2-2-6 → Camera), or tap the search box for the touch keyboard · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
 `*` and `#` are left to the phone's own software.
@@ -46,7 +46,7 @@ The selected icon zooms in, Nokia style.
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |
 | Forget most-used history | resets the automatic dock |
 | Hidden apps | apps hidden with hold ● → *Hide from launcher*; pick one to show it again |
-| Number key shortcuts (0-9) | pick an app, shortcut or activity for each digit |
+| Number key shortcuts (1-9) | pick an app, shortcut or activity for each digit |
 | App drawer layout | Grid / List |
 | Key tester, Default launcher, Phone settings | |
 
@@ -76,7 +76,7 @@ back to the app's own name.
 
 | Key | Code | Use |
 |---|---|---|
-| ☆ | F3 (133) | Settings / Options |
+| ☆ | F3 (133) | not used |
 | `*` | STAR or vendor 1000 | not used (belongs to the phone) |
 | 👤 | F1 (131) | Contacts |
 | ✉ | F2 (132) | Messages |

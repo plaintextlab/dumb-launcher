@@ -12,6 +12,31 @@ object Ui {
     /** Accent colours (Metro palette). The first is the default. */
     val COLOURS = Metro.ACCENTS
 
+    /**
+     * A list of colours, each with a square swatch of how it looks. [items] are
+     * (name, colour to show, what choosing it does); [current] is the index chosen now.
+     */
+    fun chooseColour(a: Activity, title: String, items: List<Triple<String, Int, () -> Any?>>, current: Int) {
+        val d = a.resources.displayMetrics.density
+        val adapter = object : android.widget.ArrayAdapter<String>(a, android.R.layout.simple_list_item_1, items.map { it.first }) {
+            override fun getView(pos: Int, convert: View?, parent: android.view.ViewGroup): View {
+                val v = super.getView(pos, convert, parent) as TextView
+                v.text = items[pos].first + if (pos == current) "   ✓" else ""
+                val sw = (28 * d).toInt()
+                v.setCompoundDrawablesRelative(android.graphics.drawable.GradientDrawable().apply {
+                    setColor(items[pos].second)
+                    setStroke((1 * d).toInt().coerceAtLeast(1), 0x66FFFFFF)   // outline so dark / see-through still shows
+                    setSize(sw, sw); setBounds(0, 0, sw, sw)
+                }, null, null, null)
+                v.compoundDrawablePadding = (14 * d).toInt()
+                return v
+            }
+        }
+        AlertDialog.Builder(a).setTitle(title)
+            .setAdapter(adapter) { _, which -> items[which].third() }
+            .show().listView?.setSelection(current.coerceAtLeast(0))
+    }
+
     /** A D-pad navigable list dialog. */
     fun choose(a: Activity, title: String, items: List<Pair<String, () -> Any?>>) {
         AlertDialog.Builder(a)
