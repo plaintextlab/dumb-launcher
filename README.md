@@ -31,11 +31,11 @@ The selected icon zooms in, Nokia style.
 | Show notifications on Home | On / Off |
 | Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · hold ▲ (or tap) open the player · Back hides it until the next song or until playback resumes |
 | Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
-| Highlight colour | 10 colours |
+| Accent colour | 15 flat colours (Cyan by default): the selection, and the tiles in the Metro style |
 | Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |
-| Zoom selected icon | On / Off |
+| Zoom selected icon | On / Off (in the Metro grid the selected tile gets a white frame and lifts slightly) |
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None. Apps the pack has no icon for are put on the pack's own backing shape (if the pack has one), so they still match |
-| Icon style | **Tiles** (default: every app on the same glossy rounded tile, same size) / Clean (no white box) / Original |
+| Icon style | **Metro** (default: every app a flat square in the accent colour with a white glyph, same size; the drawer grid shows the name inside the tile) / Glossy tiles / Clean (no white box) / Original |
 | Home ▲▼◀▶ shortcuts | pick an app for each |
 | Dock on Home (keys 1-5) | On / Off. Bottom row showing the apps on keys 1-5 |
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |
