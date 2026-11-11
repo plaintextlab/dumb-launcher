@@ -42,10 +42,18 @@ object Apps {
             .filter { it.first != home && it.first.flattenToString() !in hidden }
             .map { (cn, ri) -> AppEntry(cn.flattenToString(), ri.loadLabel(pm).toString(), null) } // icons load later
             .plus(Shortcuts.drawerExtras(c).filter { it !in hidden }.mapNotNull { Shortcuts.entry(c, it) })
+            .map { renamed(c, it) }
             .sortedBy { it.label.lowercase() }
     }
 
-    fun entry(c: Context, target: String?): AppEntry? {
+    /** Apply the user's own name for this app, if they gave it one. */
+    fun renamed(c: Context, e: AppEntry): AppEntry =
+        Prefs.customLabel(c, e.target)?.let { e.copy(label = it) } ?: e
+
+    fun entry(c: Context, target: String?): AppEntry? = rawEntry(c, target)?.let { renamed(c, it) }
+
+    /** The original label, ignoring any rename. */
+    fun rawEntry(c: Context, target: String?): AppEntry? {
         if (target == null) return null
         if (target == Prefs.SPECIAL_APPS) {
             return AppEntry(target, "All apps", c.getDrawable(R.drawable.ic_launcher))

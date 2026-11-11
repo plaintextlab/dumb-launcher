@@ -52,6 +52,10 @@ choose where it goes: the app drawer, a Home arrow key, or a Home number key. "A
 To change a single app's icon, select it in All apps → hold ● → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
 
+To rename an app, select it in All apps → hold ● → **Rename…** and type the new name. The new name
+is used everywhere (drawer, T9 search, dock, Settings). **Reset name** (or saving an empty name) goes
+back to the app's own name.
+
 ## Install
 
 1. Download `app-debug.apk` (from the **Build APK** workflow artifacts on GitHub, or a local build).

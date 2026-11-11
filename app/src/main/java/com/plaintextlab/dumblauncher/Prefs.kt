@@ -26,6 +26,11 @@ object Prefs {
 
     fun iconOverride(target: String) = "icon:$target"
 
+    /** A name the user gave an app or shortcut, shown instead of its own label. */
+    fun customLabel(c: Context, target: String): String? = get(c, "label:$target")
+    fun setCustomLabel(c: Context, target: String, label: String?) =
+        set(c, "label:$target", label?.trim()?.takeIf { it.isNotEmpty() })
+
     val DPAD = listOf(UP to "▲ Up", DOWN to "▼ Down", LEFT to "◀ Left", RIGHT to "▶ Right")
 
     /** Home number-key shortcut 0-9. */

@@ -96,6 +96,8 @@ class AppsActivity : BaseActivity() {
                         { Prefs.set(this, Prefs.num(n), e.target) }
                 })
         }
+        items += "Rename…" to { rename(e) }
+        if (Prefs.customLabel(this, e.target) != null) items += "Reset name" to { setLabel(e, null) }
         items += "Change icon" to { Icons.change(this, e) }
         items += "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() }
         items += "Hide from launcher" to {
@@ -109,6 +111,40 @@ class AppsActivity : BaseActivity() {
             Apps.start(this, Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
         }
         Ui.choose(this, e.label, items)
+    }
+
+    /** Ask for a new name; an empty name goes back to the app's own label. */
+    private fun rename(e: AppEntry) {
+        val input = android.widget.EditText(this).apply {
+            setText(e.label)
+            setSelection(text.length)
+            isSingleLine = true
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+        }
+        val box = android.widget.FrameLayout(this).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setTitle("Rename ${e.label}")
+            .setMessage("Leave empty to use the app's own name")
+            .setView(box)
+            .setPositiveButton("Save") { _, _ -> setLabel(e, input.text.toString()) }
+            .setNegativeButton("Cancel", null)
+            .create()
+        input.setOnEditorActionListener { _, _, _ -> setLabel(e, input.text.toString()); dialog.dismiss(); true }
+        dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+        input.requestFocus()
+    }
+
+    private fun setLabel(e: AppEntry, label: String?) {
+        Prefs.setCustomLabel(this, e.target, label)
+        val updated = Apps.renamed(this, e.copy(label = Apps.rawEntry(this, e.target)?.label ?: e.label))
+        all = (all.filter { it.target != e.target } + updated).sortedBy { it.label.lowercase() }
+        filter()
+        Bg.run({ AppList.refresh(this) })
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
