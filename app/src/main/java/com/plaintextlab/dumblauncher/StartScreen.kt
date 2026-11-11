@@ -46,7 +46,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     private class Two(val view: View) : Cell() { override val span = 2 }
 
     fun build(counts: Map<String, Int>, animate: Boolean = true) {
-        column.removeAllViews(); rows.clear()
+        column.removeAllViews(); rows.clear(); weatherTile = null; photosTile = null
         val width = a.resources.displayMetrics.widthPixels - column.paddingLeft - column.paddingRight
         u = (width - 5 * gap) / 6
 
@@ -59,6 +59,8 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         // Interleave like a real Start screen: a medium, a block of four smalls, a medium...
         val blocks = smalls.chunked(4).map { block -> One(smallBlock(block.map { tile(it, counts) })) }
         mediums.firstOrNull()?.let { cells += One(tile(it, counts)) }
+        if (Weather.enabled(a)) cells += One(weatherTileView().also { weatherTile = it; fillWeather() })
+        if (Photos.enabled(a)) cells += Two(photosTileView().also { photosTile = it; showPhoto() })
         cells += Two(musicTileView().also { musicTile = it })
         var b = 0
         for (m in mediums.drop(1)) {
@@ -211,10 +213,76 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
 
     private var ticks = 0
 
-    /** Called every second while Home is showing: flips the date tile now and then. */
+    /** Called every second while Home is showing: live tiles change now and then, out of step. */
     fun tick() {
-        val t = dateTile ?: return
-        if (++ticks % 8 == 0) Turnstile.flip(t) { dateFace = 1 - dateFace; fillDate(t) }
+        ticks++
+        dateTile?.let { t -> if (ticks % 8 == 0) Turnstile.flip(t) { dateFace = 1 - dateFace; fillDate(t) } }
+        photosTile?.let { t -> if (ticks % 6 == 3 && photos.size > 1) Turnstile.flip(t) { photoIndex++; showPhoto() } }
+        weatherTile?.let { t -> if (ticks % 10 == 5 && weather != null) Turnstile.flip(t) { weatherFace = 1 - weatherFace; fillWeather() } }
+    }
+
+    // Weather: a blue tile with the temperature and a symbol; the back shows today's range.
+    private var weather: Weather.Now? = null
+    private var weatherFace = 0
+    private var weatherTile: FrameLayout? = null
+
+    private fun weatherTileView() = box(0xFF0078D7.toInt()).apply { setOnClickListener { onOpen(WEATHER) } }
+
+    /** New weather data (or null while there is none yet). */
+    fun weather(now: Weather.Now?) { weather = now; fillWeather() }
+
+    private fun fillWeather() {
+        val t = weatherTile ?: return
+        t.removeAllViews()
+        val w = weather
+        val f = "°"
+        if (w == null) {
+            t.addView(ImageView(a).apply { setImageResource(R.drawable.w_partly) },
+                FrameLayout.LayoutParams((medium * 0.42f).toInt(), (medium * 0.42f).toInt(), Gravity.CENTER))
+            t.addView(text(if (Weather.hasPermission(a)) "Weather" else "Weather · allow location", 13f), corner(Gravity.BOTTOM or Gravity.START))
+            return
+        }
+        if (weatherFace == 0) {
+            t.addView(ImageView(a).apply { setImageResource(w.icon) },
+                FrameLayout.LayoutParams((medium * 0.38f).toInt(), (medium * 0.38f).toInt(), Gravity.TOP or Gravity.END)
+                    .apply { setMargins(0, (8 * dp).toInt(), (8 * dp).toInt(), 0) })
+            t.addView(text("${w.temp}$f", 34f).apply { typeface = Typeface.create("sans-serif-light", Typeface.NORMAL) },
+                FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.START or Gravity.CENTER_VERTICAL)
+                    .apply { leftMargin = (8 * dp).toInt() })
+        } else {
+            val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL }
+            col.addView(text(w.text, 15f))
+            col.addView(text("${w.high}$f / ${w.low}$f", 22f).apply { typeface = Typeface.create("sans-serif-light", Typeface.NORMAL) })
+            t.addView(col, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.START or Gravity.CENTER_VERTICAL).apply { leftMargin = (8 * dp).toInt() })
+        }
+        t.addView(text(w.place.ifEmpty { "Weather" }, 13f), corner(Gravity.BOTTOM or Gravity.START))
+    }
+
+    // Photos: a wide tile that shows your recent photos one after another.
+    private var photos: List<android.graphics.Bitmap> = emptyList()
+    private var photoIndex = 0
+    private var photosTile: FrameLayout? = null
+
+    private fun photosTileView() = box(0xFF2D2D30.toInt()).apply { setOnClickListener { onOpen(PHOTOS) } }
+
+    /** Recent photo thumbnails, newest first. */
+    fun photos(list: List<android.graphics.Bitmap>) { photos = list; photoIndex = 0; showPhoto() }
+
+    private fun showPhoto() {
+        val t = photosTile ?: return
+        t.removeAllViews()
+        if (photos.isEmpty()) {
+            t.addView(ImageView(a).apply { setImageResource(R.drawable.s_image) },
+                FrameLayout.LayoutParams((medium * 0.4f).toInt(), (medium * 0.4f).toInt(), Gravity.CENTER))
+        } else {
+            t.addView(ImageView(a).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setImageBitmap(photos[photoIndex % photos.size])
+            }, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+        t.addView(text(if (photos.isEmpty() && !Photos.hasPermission(a)) "Photos · allow access" else "Photos", 13f),
+            corner(Gravity.BOTTOM or Gravity.START))
     }
 
     private fun musicTileView() = box(glass).apply { visibility = View.GONE }
@@ -246,5 +314,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         const val CLOCK = 101
         const val MUSIC = 102
         const val CALENDAR = 103
+        const val WEATHER = 104
+        const val PHOTOS = 105
     }
 }

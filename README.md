@@ -30,6 +30,10 @@ The selected icon zooms in, Nokia style.
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons; hidden while the music widget shows) |
 | Show notifications on Home | On / Off |
 | Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · hold ▲ (or tap) open the player · Back hides it until the next song or until playback resumes |
+| Tile colours (Metro) | Each app's own colour (default) / Accent colour |
+| Weather tile (Metro) | On / Off. Current temperature and today's range from Open-Meteo (free, no account), for your approximate location rounded to about 1 km; refreshed at most every 30 minutes; tap to update |
+| Weather units | °C / °F |
+| Photos tile (Metro) | On / Off. A wide tile cycling through your recent photos; tap to open the gallery |
 | Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
 | Accent colour | 15 flat colours (Cyan by default): the selection, and the tiles in the Metro style |
 | Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |

@@ -40,7 +40,11 @@ class HomeActivity : BaseActivity() {
                 android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
-        val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
+        // Location and photos only for the Weather and Photos live tiles, and only if they are on.
+        val tiles = if (!metro) emptyList() else listOfNotNull(
+            Manifest.permission.ACCESS_COARSE_LOCATION.takeIf { Weather.enabled(this) },
+            Photos.permission.takeIf { Photos.enabled(this) })
+        val needed = (listOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS) + tiles)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isNotEmpty()) requestPermissions(needed.toTypedArray(), 1)
     }
@@ -84,6 +88,26 @@ class HomeActivity : BaseActivity() {
         }
         start.build(counts, animate)
         start.music(shownMusic)
+        if (animate) loadLiveTiles()
+    }
+
+    /** Weather (cached at once, refreshed online when old) and recent photos, off the UI thread. */
+    private fun loadLiveTiles(forceWeather: Boolean = false) {
+        val app = applicationContext
+        if (Weather.enabled(this)) {
+            start.weather(Weather.cached(this))
+            Thread {
+                val w = Weather.refresh(app, forceWeather)
+                runOnUiThread { start.weather(w) }
+            }.start()
+        }
+        if (Photos.enabled(this)) {
+            val px = (resources.displayMetrics.widthPixels * 0.66f).toInt()
+            Thread {
+                val thumbs = Photos.recent(app, 8).mapNotNull { Photos.thumb(app, it, px / 2) }
+                runOnUiThread { start.photos(thumbs) }
+            }.start()
+        }
     }
 
     private fun packageOf(i: Intent) = packageManager.resolveActivity(i, 0)?.activityInfo?.packageName
@@ -93,6 +117,14 @@ class HomeActivity : BaseActivity() {
         StartScreen.ALL_APPS -> openDrawer()
         StartScreen.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show() }
         StartScreen.MUSIC -> leave { Music.open(this) }
+        StartScreen.WEATHER -> {
+            android.widget.Toast.makeText(this, "Updating weather…", android.widget.Toast.LENGTH_SHORT).show()
+            loadLiveTiles(forceWeather = true)
+        }
+        StartScreen.PHOTOS -> leave {
+            val gallery = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY)
+            Apps.start(this, gallery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
         StartScreen.CALENDAR -> leave { if (!Apps.launch(this, Apps.calendar(this))) android.widget.Toast.makeText(this, "No calendar app found", android.widget.Toast.LENGTH_SHORT).show() }
         in 0..9 -> openNumber(key)
         else -> openShortcut(Prefs.DPAD[-key - 1].first)
@@ -117,8 +149,9 @@ class HomeActivity : BaseActivity() {
         audio.unregisterAudioDeviceCallback(audioDevices)
     }
 
-    override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) =
-        refreshStatus()
+    override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
+        if (metro) { buildStart(animate = false); loadLiveTiles() } else refreshStatus()
+    }
 
     private fun refreshStatus() {
         notifs.removeAllViews()

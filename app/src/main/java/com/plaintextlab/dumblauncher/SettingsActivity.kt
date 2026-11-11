@@ -43,6 +43,8 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Icon pack") -> R.drawable.s_grid
             title.startsWith("Icon style") -> R.drawable.s_shape
             title.startsWith("Tile colours") -> R.drawable.s_palette
+            title.startsWith("Weather") -> R.drawable.w_partly
+            title.startsWith("Photos") -> R.drawable.s_image
             title.startsWith("Reset") -> R.drawable.s_refresh
             title.startsWith("Key tester") -> R.drawable.s_keyboard
             title.contains("default launcher") -> R.drawable.s_home
@@ -131,6 +133,18 @@ class SettingsActivity : BaseActivity() {
         },
         Row("Tile colours (Metro)", { if (Metro.appColours(this)) "Each app's own colour" else "Accent colour" }) {
             Prefs.setBool(this, Prefs.TILE_COLOURS, !Metro.appColours(this)); Icons.clear(); refresh()
+        },
+        Row("Weather tile (Metro)", { if (Weather.enabled(this)) "On: uses approximate location and the internet" else "Off" }) {
+            toggle(Prefs.SHOW_WEATHER, true)
+            if (Weather.enabled(this) && !Weather.hasPermission(this))
+                requestPermissions(arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION), 2)
+        },
+        Row("Weather units", { if (Weather.fahrenheit(this)) "°F" else "°C" }) {
+            toggle(Prefs.WEATHER_F, false); Weather.clear(this)
+        },
+        Row("Photos tile (Metro)", { onOff(Prefs.SHOW_PHOTOS, true) }) {
+            toggle(Prefs.SHOW_PHOTOS, true)
+            if (Photos.enabled(this) && !Photos.hasPermission(this)) requestPermissions(arrayOf(Photos.permission), 3)
         },
         // Shortcuts
         *Prefs.DPAD.map { (pref, name) ->
