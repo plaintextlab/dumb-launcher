@@ -7,7 +7,7 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up → All apps, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
 | **All apps**: A–Z grid (or list) | just type on the keypad to search (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
@@ -26,6 +26,7 @@ The selected icon zooms in, Nokia style.
 | Refresh blurred wallpaper | re-makes the blur after changing wallpaper outside the launcher |
 | Wallpaper dimming | 0 / 25 / 50 / 75 % (keeps text readable) |
 | Hide notification bar | On / Off (swipe down to peek) |
+| Clock on Home | On / Off |
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons; hidden while the music widget shows) |
 | Show notifications on Home | On / Off |
 | Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · hold ▲ (or tap) open the player · Back hides it until the next song or until playback resumes |

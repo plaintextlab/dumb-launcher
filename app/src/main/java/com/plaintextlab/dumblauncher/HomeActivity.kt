@@ -7,6 +7,7 @@ import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.net.Uri
 import android.os.Bundle
+import android.provider.AlarmClock
 import android.provider.CallLog
 import android.view.KeyEvent
 import android.view.View
@@ -34,6 +35,10 @@ class HomeActivity : BaseActivity() {
         findViewById<View>(R.id.musicPlay).setOnClickListener { Music.playPause(this); refreshMusicSoon() }
         findViewById<View>(R.id.musicNext).setOnClickListener { Music.next(this); refreshMusicSoon() }
         findViewById<View>(R.id.music).setOnClickListener { Music.open(this) }
+        // Touch: tap the clock for the Clock app, swipe up anywhere for All apps.
+        findViewById<View>(R.id.clockBox).setOnClickListener {
+            Apps.start(this, Intent(AlarmClock.ACTION_SHOW_ALARMS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
         val needed = arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_SMS)
             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isNotEmpty()) requestPermissions(needed.toTypedArray(), 1)
@@ -41,6 +46,8 @@ class HomeActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        findViewById<View>(R.id.clockBox).visibility =
+            if (Prefs.getBool(this, Prefs.SHOW_CLOCK, true)) View.VISIBLE else View.GONE
         refreshStatus()
         refreshShortcuts()
         refreshDock()
@@ -72,19 +79,25 @@ class HomeActivity : BaseActivity() {
             "${CallLog.Calls.TYPE}=${CallLog.Calls.MISSED_TYPE} AND ${CallLog.Calls.NEW}=1")
         val unread = count(Manifest.permission.READ_SMS, Uri.parse("content://sms/inbox"), "read=0")
         if (headphonesConnected()) addChip(getDrawable(R.drawable.ic_headphones), 0)
-        if (missed > 0) addChip(getDrawable(R.drawable.ic_call), missed)
-        if (unread > 0) addChip(getDrawable(R.drawable.ic_message), unread)
+        if (missed > 0) addChip(getDrawable(R.drawable.ic_call), missed) { openCallLog() }
+        if (unread > 0) addChip(getDrawable(R.drawable.ic_message), unread) {
+            Apps.start(this, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
 
         // Other apps (only if notification access is allowed). Room for 5 chips in total.
         val others = NotifListener.counts
         val room = 5 - notifs.childCount  // about 5 chips fit across a 4.3" screen
-        others.take(if (others.size > room) room - 1 else room).forEach { (pkg, n) -> addChip(appIcon(pkg), n) }
+        others.take(if (others.size > room) room - 1 else room).forEach { (pkg, n) ->
+            addChip(appIcon(pkg), n) { packageManager.getLaunchIntentForPackage(pkg)?.let { Apps.start(this, it) } }
+        }
         val rest = others.drop(if (others.size > room) room - 1 else room).sumOf { it.second }
         if (rest > 0) addChip(null, rest, prefix = "+")
     }
 
     /** One notification chip: icon and count. */
-    private fun addChip(icon: android.graphics.drawable.Drawable?, n: Int, prefix: String = "") {
+    private fun addChip(icon: android.graphics.drawable.Drawable?, n: Int, prefix: String = "",
+                        onTap: (() -> Unit)? = null) {
         val dp = resources.displayMetrics.density
         val chip = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -98,6 +111,7 @@ class HomeActivity : BaseActivity() {
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             setPadding((4 * dp).toInt(), 0, 0, 0)
         })
+        onTap?.let { tap -> chip.setOnClickListener { tap() } }
         notifs.addView(chip)
     }
 
@@ -134,6 +148,7 @@ class HomeActivity : BaseActivity() {
             v.findViewById<ImageView>(R.id.icon).setImageDrawable(slot.entry?.let { Icons.get(this, it) })
             v.findViewById<TextView>(R.id.label).text = slot.key.toString()
             v.contentDescription = slot.entry?.label
+            v.setOnClickListener { openNumber(slot.key) }
             dock.addView(v)
         }
     }
@@ -157,6 +172,7 @@ class HomeActivity : BaseActivity() {
             v.findViewById<ImageView>(R.id.icon).setImageDrawable(icon)
             v.findViewById<TextView>(R.id.label).text = if (icon == null) arm.second else ""
             v.contentDescription = entry?.label
+            v.setOnClickListener { openShortcut(Prefs.DPAD[i].first) }
         }
     }
 
@@ -176,13 +192,12 @@ class HomeActivity : BaseActivity() {
         if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
         Keys.digit(code)?.let { n ->
-            val target = if (n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
-            if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
+            openNumber(n)
             return true
         }
         if (Keys.isOptions(code)) { options(); return true }
         if (Keys.isCall(code)) {
-            Apps.start(this, Intent(Intent.ACTION_VIEW).setType(CallLog.Calls.CONTENT_TYPE)); return true
+            openCallLog(); return true
         }
         if (code == KeyEvent.KEYCODE_BACK) { event.startTracking(); return true } // Back hides the music widget
         return super.onKeyDown(code, event)
@@ -207,12 +222,41 @@ class HomeActivity : BaseActivity() {
     override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
         val shortPress = event.isTracking && !event.isCanceled
         when {
-            Keys.isOk(code) -> { if (shortPress) startActivity(Intent(this, AppsActivity::class.java)) }
+            Keys.isOk(code) -> { if (shortPress) openDrawer() }
             Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
             code == KeyEvent.KEYCODE_BACK -> { if (shortPress) hideMusic() }
             else -> return super.onKeyUp(code, event)
         }
         return true
+    }
+
+    private fun openDrawer() = startActivity(Intent(this, AppsActivity::class.java))
+
+    private fun openCallLog() =
+        Apps.start(this, Intent(Intent.ACTION_VIEW).setType(CallLog.Calls.CONTENT_TYPE))
+
+    /** Number key [n] (or its dock icon): open its app, or pick one if the key is empty. */
+    private fun openNumber(n: Int) {
+        val target = if (n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
+        if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
+    }
+
+    /** Swipe up anywhere on Home opens All apps. */
+    private val swipe by lazy {
+        val minDist = 80 * resources.displayMetrics.density
+        android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vx: Float, vy: Float): Boolean {
+                val start = e1 ?: return false
+                val dy = start.y - e2.y
+                if (dy > minDist && dy > 2 * Math.abs(e2.x - start.x) && vy < 0) { openDrawer(); return true }
+                return false
+            }
+        })
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        swipe.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     private fun openShortcut(pref: String) {

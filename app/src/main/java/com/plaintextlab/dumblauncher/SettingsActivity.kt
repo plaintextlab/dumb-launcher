@@ -35,6 +35,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Forget") -> R.drawable.s_refresh
             title.startsWith("Hidden") -> R.drawable.s_eye_off
             title.startsWith("Music") -> R.drawable.ic_music
+            title.startsWith("Clock") -> R.drawable.s_clock
             title.contains("otification") -> R.drawable.s_bell
             title.startsWith("Highlight") -> R.drawable.s_palette
             title.startsWith("Animations") -> R.drawable.s_motion
@@ -106,6 +107,7 @@ class SettingsActivity : BaseActivity() {
         },
         // Screen
         Row("Hide notification bar", { onOff(Prefs.HIDE_STATUS, false) }) { toggle(Prefs.HIDE_STATUS, false) },
+        Row("Clock on Home", { onOff(Prefs.SHOW_CLOCK, true) }) { toggle(Prefs.SHOW_CLOCK, true) },
         Row("Show arrow-key apps on Home", { onOff(Prefs.SHOW_DPAD, true) }) { toggle(Prefs.SHOW_DPAD, true) },
         Row("Show notifications on Home", { onOff(Prefs.SHOW_COUNTS, true) }) { toggle(Prefs.SHOW_COUNTS, true) },
         Row("Music widget on Home", { onOff(Prefs.SHOW_MUSIC, true) }) { toggle(Prefs.SHOW_MUSIC, true) },
