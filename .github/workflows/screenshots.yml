@@ -47,6 +47,9 @@ jobs:
             adb shell input keyevent 4 ; sleep 1
             adb shell input keyevent 7 ; sleep 3
             adb exec-out screencap -p > shots/6-drawer-from-0.png
+            adb shell input keyevent 19 ; sleep 1 ; adb shell input keyevent 23 ; sleep 2
+            adb exec-out screencap -p > shots/6b-letters.png
+            adb shell input keyevent 4 ; sleep 2
             adb shell input tap 240 95 ; sleep 3
             adb exec-out screencap -p > shots/7-keyboard.png
             adb shell input text cam ; sleep 2

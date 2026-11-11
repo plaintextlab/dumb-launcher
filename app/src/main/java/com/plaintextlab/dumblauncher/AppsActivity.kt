@@ -50,7 +50,9 @@ class AppsActivity : BaseActivity() {
         list.visibility = View.VISIBLE
         findViewById<View>(if (grid) R.id.list else R.id.grid).visibility = View.GONE
         list.adapter = adapter
-        list.setOnItemClickListener { _, _, pos, _ -> (rows[pos] as? AppEntry)?.let { choose(it) } }
+        list.setOnItemClickListener { _, _, pos, _ ->
+            when (val r = rows[pos]) { is AppEntry -> choose(r); is String -> jumpList() }
+        }
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) (rows[pos] as? AppEntry)?.let { options(it) }; true }
         Ui.trackHighlight(list)
         Anim.cascade(list)
@@ -189,6 +191,64 @@ class AppsActivity : BaseActivity() {
         return out
     }
 
+    /**
+     * Tap (or OK on) a letter header: every letter in a grid over the list. Letters with apps
+     * are lit in the accent colour, the rest are dimmed; choosing one jumps to its apps.
+     */
+    private fun jumpList() {
+        val letters = listOf("#") + ('a'..'z').map { it.toString() }
+        val has = rows.filterIsInstance<String>().toSet()
+        val d = resources.displayMetrics.density
+        val accent = Metro.accent(this)
+        val dialog = android.app.Dialog(this, android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen)
+        val cell = ((resources.displayMetrics.widthPixels - 16 * d - 3 * 8 * d) / 4).toInt()
+        val grid = android.widget.GridView(this).apply {
+            numColumns = 4
+            horizontalSpacing = (8 * d).toInt(); verticalSpacing = (8 * d).toInt()
+            setPadding((8 * d).toInt(), (16 * d).toInt(), (8 * d).toInt(), (16 * d).toInt())
+            clipToPadding = false
+            selector = android.graphics.drawable.GradientDrawable().apply {
+                setStroke((3 * d).toInt(), android.graphics.Color.WHITE); setColor(android.graphics.Color.TRANSPARENT)
+            }
+            setDrawSelectorOnTop(true)
+            adapter = object : BaseAdapter() {
+                override fun getCount() = letters.size
+                override fun getItem(p: Int) = letters[p]
+                override fun getItemId(p: Int) = p.toLong()
+                override fun areAllItemsEnabled() = false
+                override fun isEnabled(p: Int) = letters[p] in has
+                override fun getView(p: Int, convert: View?, parent: ViewGroup): View =
+                    ((convert as? TextView) ?: TextView(this@AppsActivity)).apply {
+                        val on = letters[p] in has
+                        text = letters[p]; textSize = 30f
+                        typeface = android.graphics.Typeface.create("sans-serif-light", android.graphics.Typeface.NORMAL)
+                        gravity = android.view.Gravity.START or android.view.Gravity.BOTTOM
+                        setPadding((8 * d).toInt(), 0, 0, (4 * d).toInt())
+                        setTextColor(if (on) android.graphics.Color.WHITE else 0xFF555555.toInt())
+                        setBackgroundColor(if (on) accent else 0xFF222222.toInt())
+                        layoutParams = AbsListView.LayoutParams(cell, cell)
+                    }
+            }
+            setOnItemClickListener { _, _, p, _ ->
+                val at = rows.indexOf(letters[p])
+                if (at >= 0) {
+                    (list as? android.widget.ListView)?.setSelectionFromTop(at, 0) ?: list.setSelection(at)
+                }
+                dialog.dismiss()
+            }
+        }
+        dialog.setContentView(grid)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(0xF0000000.toInt()))
+        dialog.setOnShowListener {
+            // Start on the letter that was selected, if it has apps.
+            val now = (rows.getOrNull(list.selectedItemPosition) as? String) ?: has.minOrNull()
+            grid.setSelection(letters.indexOf(now).coerceAtLeast(0))
+            grid.requestFocus()
+            Turnstile.featherIn(grid) { (0 until grid.childCount).map { grid.getChildAt(it) } }
+        }
+        dialog.show()
+    }
+
     /** The title and the visible list rows, for the turnstile. */
     private fun screenRows(): List<View> = listOf<View>(queryView) + (0 until list.childCount).map { list.getChildAt(it) }
 
@@ -290,8 +350,8 @@ class AppsActivity : BaseActivity() {
         override fun getItemId(pos: Int) = pos.toLong()
         override fun getViewTypeCount() = 2
         override fun getItemViewType(pos: Int) = if (rows[pos] is AppEntry) 0 else 1
-        override fun areAllItemsEnabled() = rows.all { it is AppEntry }
-        override fun isEnabled(pos: Int) = rows[pos] is AppEntry
+        override fun areAllItemsEnabled() = true
+        override fun isEnabled(pos: Int) = true   // letter headers open the letter grid
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
             val item = rows[pos]
             if (item is String) {   // letter header
