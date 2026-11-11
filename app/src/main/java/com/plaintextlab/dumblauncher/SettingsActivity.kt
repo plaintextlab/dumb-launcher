@@ -30,6 +30,8 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Hide notification bar") -> R.drawable.s_fullscreen
             title.contains("arrow-key") || title.contains("shortcut") -> R.drawable.s_dpad
             title.startsWith("Number key") -> R.drawable.s_dialpad
+            title.startsWith("Dock") -> R.drawable.s_grid
+            title.startsWith("Forget") -> R.drawable.s_refresh
             title.startsWith("Music") -> R.drawable.ic_music
             title.contains("otification") -> R.drawable.s_bell
             title.startsWith("Highlight") -> R.drawable.s_palette
@@ -125,9 +127,27 @@ class SettingsActivity : BaseActivity() {
                 Ui.pick(this, pref, "Pick app for $name")
             }
         }.toTypedArray(),
+        Row("Dock on Home (keys 1-5)", { onOff(Prefs.SHOW_DOCK, true) }) { toggle(Prefs.SHOW_DOCK, true) },
+        Row("Dock apps", {
+            Dock.slots(this).joinToString("  ") { "${it.key}${if (it.auto) "·auto" else ""}" }
+        }) {
+            Ui.choose(this, "Dock apps (keys 1-5)", Dock.slots(this).map { slot ->
+                val name = slot.entry?.label ?: "empty"
+                "${slot.key}   $name${if (slot.auto) "  (auto)" else ""}" to {
+                    Ui.choose(this, "Key ${slot.key}", listOf(
+                        "Choose app or shortcut" to { Ui.pick(this, Prefs.num(slot.key), "Pick app for key ${slot.key}") },
+                        "Automatic (most used)" to { Prefs.set(this, Prefs.num(slot.key), null); refresh() },
+                    ))
+                }
+            })
+        },
+        Row("Forget most-used history", action = {
+            Usage.clear(this); refresh(); Toast.makeText(this, "Most-used history cleared", Toast.LENGTH_SHORT).show()
+        }),
         Row("Number key shortcuts (0-9)", { "${(0..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 10 set" }) {
             Ui.choose(this, "Number key shortcuts", (0..9).map { n ->
-                "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label ?: "not set"}" to {
+                "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label
+                    ?: if (n in Dock.KEYS && Dock.enabled(this)) "auto (dock)" else "not set"}" to {
                     Ui.choose(this, "Key $n", listOf(
                         "Choose app or shortcut" to { Ui.pick(this, Prefs.num(n), "Pick app for key $n") },
                         "Clear" to { Prefs.set(this, Prefs.num(n), null); refresh() },

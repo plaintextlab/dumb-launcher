@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:descendantFocusability="blocksDescendants">
 
     <!-- Clock at the top, big. -->
     <LinearLayout
@@ -37,7 +38,7 @@
     <LinearLayout
         android:id="@+id/dpad"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal" android:layout_marginBottom="12dp"
+        android:layout_gravity="center_horizontal" android:layout_marginBottom="6dp"
         android:orientation="vertical" android:gravity="center_horizontal">
 
         <include android:id="@+id/sc_up" layout="@layout/item_shortcut" />
@@ -49,7 +50,7 @@
             <include android:id="@+id/sc_left" layout="@layout/item_shortcut" />
 
             <TextView
-                android:layout_width="48dp" android:layout_height="48dp"
+                android:layout_width="40dp" android:layout_height="40dp"
                 android:gravity="center" android:text="●"
                 android:textSize="22sp" android:textColor="@color/dim" />
 
@@ -58,6 +59,13 @@
 
         <include android:id="@+id/sc_down" layout="@layout/item_shortcut" />
     </LinearLayout>
+
+    <!-- Dock: what keys 1-5 open (your picks, or your most used apps). -->
+    <LinearLayout
+        android:id="@+id/dock"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" android:paddingHorizontal="8dp"
+        android:orientation="horizontal" />
 
     <TextView android:id="@+id/hint" style="@style/Hint" />
 </LinearLayout>

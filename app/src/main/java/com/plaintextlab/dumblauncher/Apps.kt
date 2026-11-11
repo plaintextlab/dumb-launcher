@@ -64,11 +64,13 @@ object Apps {
         if (target == Prefs.SPECIAL_APPS) {
             a.startActivity(Intent(a, AppsActivity::class.java)); return true
         }
-        if (Shortcuts.isExtra(target)) return Shortcuts.launch(a, target)
-        val cn = ComponentName.unflattenFromString(target) ?: return false
-        val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setComponent(cn)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        return start(a, i)
+        val ok = if (Shortcuts.isExtra(target)) Shortcuts.launch(a, target) else {
+            val cn = ComponentName.unflattenFromString(target) ?: return false
+            start(a, Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setComponent(cn)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
+        }
+        if (ok) Usage.record(a, target)
+        return ok
     }
 
     fun start(a: Activity, i: Intent): Boolean = try {

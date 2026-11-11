@@ -28,6 +28,9 @@ class HomeActivity : BaseActivity() {
         findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    hold ● Settings"
         Prefs.ensureDefaults(this)
         // The buttons also work by touch.
+        listOf(R.id.musicPrev, R.id.musicPlay, R.id.musicNext).forEach {
+            findViewById<View>(it).apply { isFocusable = false; isFocusableInTouchMode = false }
+        }
         findViewById<View>(R.id.musicPrev).setOnClickListener { Music.previous(this); refreshMusicSoon() }
         findViewById<View>(R.id.musicPlay).setOnClickListener { Music.playPause(this); refreshMusicSoon() }
         findViewById<View>(R.id.musicNext).setOnClickListener { Music.next(this); refreshMusicSoon() }
@@ -40,6 +43,7 @@ class HomeActivity : BaseActivity() {
         super.onResume()
         refreshStatus()
         refreshShortcuts()
+        refreshDock()
         Anim.homeArrive(findViewById(R.id.clockBox), notifs)
     }
 
@@ -118,6 +122,21 @@ class HomeActivity : BaseActivity() {
             ?.let { Apps.entry(this, it) }?.let { Icons.get(this, it) }
             ?: try { packageManager.getApplicationIcon(pkg) } catch (e: Exception) { null }
 
+    /** Bottom row: the apps on keys 1-5, each with its number under it. */
+    private fun refreshDock() {
+        val dock = findViewById<LinearLayout>(R.id.dock)
+        dock.removeAllViews()
+        if (!Dock.enabled(this)) { dock.visibility = View.GONE; return }
+        dock.visibility = View.VISIBLE
+        for (slot in Dock.slots(this)) {
+            val v = layoutInflater.inflate(R.layout.item_dock, dock, false)
+            v.findViewById<ImageView>(R.id.icon).setImageDrawable(slot.entry?.let { Icons.get(this, it) })
+            v.findViewById<TextView>(R.id.label).text = slot.key.toString()
+            v.contentDescription = slot.entry?.label
+            dock.addView(v)
+        }
+    }
+
     /** Fill the D-pad cross with each arrow's app icon (or a faint arrow if unset). */
     private fun refreshShortcuts() {
         val dpad = findViewById<View>(R.id.dpad)
@@ -149,7 +168,8 @@ class HomeActivity : BaseActivity() {
         if (Keys.handleAppKey(this, code, event)) return true
         if (event.repeatCount > 0) return true
         Keys.digit(code)?.let { n ->
-            if (!Apps.launch(this, Prefs.get(this, Prefs.num(n)))) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
+            val target = if (n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
+            if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
             return true
         }
         if (Keys.isOptions(code)) { options(); return true }

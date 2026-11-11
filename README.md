@@ -37,6 +37,9 @@ The selected icon zooms in, Nokia style.
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None |
 | Icon style (no pack) | Clean (no white box) / Original |
 | Home ▲▼◀▶ shortcuts | pick an app for each |
+| Dock on Home (keys 1-5) | On / Off. Bottom row showing the apps on keys 1-5 |
+| Dock apps | per key: your own pick, or Automatic (your most-opened apps) |
+| Forget most-used history | resets the automatic dock |
 | Number key shortcuts (0-9) | pick an app, shortcut or activity for each digit |
 | Reset menu, Key tester, Default launcher, Phone settings | |
 

@@ -33,28 +33,23 @@
                 android:textSize="14sp" android:textColor="@color/dim" />
         </LinearLayout>
 
-        <ImageButton
+        <ImageView
             android:id="@+id/musicPrev"
             android:layout_width="40dp" android:layout_height="40dp"
-            android:background="@null" android:src="@drawable/ic_prev"
+            android:src="@drawable/ic_prev"
             android:focusable="false" android:contentDescription="Previous" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/musicPlay"
             android:layout_width="44dp" android:layout_height="44dp"
-            android:background="@null" android:src="@drawable/ic_play"
+            android:src="@drawable/ic_play"
             android:focusable="false" android:contentDescription="Play or pause" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/musicNext"
             android:layout_width="40dp" android:layout_height="40dp"
-            android:background="@null" android:src="@drawable/ic_next"
+            android:src="@drawable/ic_next"
             android:focusable="false" android:contentDescription="Next" />
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" android:gravity="center"
-        android:text="hold ◀ prev    hold ▼ play/pause    hold ▶ next"
-        android:textSize="12sp" android:textColor="@color/dim" />
 </LinearLayout>

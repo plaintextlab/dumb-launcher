@@ -21,6 +21,7 @@ object Prefs {
     const val SHOW_DPAD = "show_dpad"
     const val DRAWER_BG = "drawer_bg"
     const val SHOW_MUSIC = "show_music"
+    const val SHOW_DOCK = "show_dock"
 
     fun iconOverride(target: String) = "icon:$target"
 
