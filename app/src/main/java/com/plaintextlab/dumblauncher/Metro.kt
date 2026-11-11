@@ -1,4 +1,7 @@
-package com.plaintextlab.dumblauncher
+        // Keep the plate reading only if a real symbol is left (at least 8% of the plate).
+        val drawn = original.count { Color.alpha(it) > 200 }
+        if (plate == null || px.count { Color.alpha(it) > 128 } < drawn * 0.08f) {
+            original.copyInto(px)                          // no plate, or too little left on itpackage com.plaintextlab.dumblauncher
 
 import android.content.Context
 import android.graphics.Bitmap
