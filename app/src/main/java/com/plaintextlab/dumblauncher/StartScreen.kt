@@ -78,7 +78,10 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     }
 
     private fun addRow(v: View) {
-        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        // A tile added as its own row (the wide ones) keeps its size; other rows fill the width.
+        val own = v.layoutParams
+        val lp = if (own != null) LinearLayout.LayoutParams(own.width, own.height)
+                 else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.bottomMargin = gap
         column.addView(v, lp); rows += v
     }

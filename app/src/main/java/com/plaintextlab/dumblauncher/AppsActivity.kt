@@ -74,7 +74,12 @@ class AppsActivity : BaseActivity() {
         queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
         adapter.notifyDataSetChanged()
         list.requestFocus()
-        list.setSelection(rows.indexOfFirst { it is AppEntry }.coerceAtLeast(0))
+        val first = rows.indexOfFirst { it is AppEntry }.coerceAtLeast(0)
+        list.setSelection(first)
+        // Keep a letter header above the first app visible, instead of scrolling it off the top.
+        if (first > 0 && list is android.widget.ListView) {
+            (list as android.widget.ListView).setSelectionFromTop(first, (64 * resources.displayMetrics.density).toInt())
+        }
     }
 
     /** Apps A-Z with a letter header before each new first letter (# for digits and symbols). */
