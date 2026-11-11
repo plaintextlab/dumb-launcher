@@ -11,13 +11,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
-import android.widget.ListView
+import android.widget.AbsListView
 import android.widget.TextView
 
-/** A–Z app list with T9 filtering. Also used to pick an app for a slot or shortcut. */
+/** All apps A–Z (grid or list) with T9 search: just type. Also used to pick an app for a key. */
 class AppsActivity : BaseActivity() {
 
     override val isDrawer = true
+    override val zooms = true
 
     companion object {
         private const val EXTRA_PREF = "pref"
@@ -27,7 +28,8 @@ class AppsActivity : BaseActivity() {
             Intent(c, AppsActivity::class.java).putExtra(EXTRA_PREF, pref).putExtra(EXTRA_TITLE, title)
     }
 
-    private lateinit var list: ListView
+    private lateinit var list: AbsListView
+    private val grid get() = Prefs.getBool(this, Prefs.DRAWER_GRID, true)
     private lateinit var queryView: TextView
     private var all: List<AppEntry> = emptyList()
     private var shown: List<AppEntry> = emptyList()
@@ -41,7 +43,9 @@ class AppsActivity : BaseActivity() {
         findViewById<TextView>(R.id.hint).text =
             if (pickPref != null) "● Choose    0-9 Search    ↩ Cancel"
             else "● Open    0-9 Search    hold ● Options"
-        list = findViewById(R.id.list)
+        list = findViewById(if (grid) R.id.grid else R.id.list)
+        list.visibility = View.VISIBLE
+        findViewById<View>(if (grid) R.id.list else R.id.grid).visibility = View.GONE
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) options(shown[pos]); true }
@@ -89,12 +93,6 @@ class AppsActivity : BaseActivity() {
                         { Prefs.set(this, Prefs.num(n), e.target) }
                 })
         }
-        items += "Put in Menu slot…" to {
-            Ui.choose(this, "Menu slot", (1..9).map { n ->
-                "$n  ${Apps.entry(this, Prefs.get(this, Prefs.slot(n)))?.label ?: "empty"}" to
-                    { Prefs.set(this, Prefs.slot(n), e.target) }
-            })
-        }
         items += "Change icon" to { Icons.change(this, e) }
         items += "Reset icon" to { Icons.setOverride(this, e.target, null, null); adapter.notifyDataSetChanged() }
         if (extra) items += "Remove from drawer" to { Shortcuts.removeFromDrawer(this, e.target); reload() }
@@ -120,7 +118,7 @@ class AppsActivity : BaseActivity() {
         override fun getItem(pos: Int) = shown[pos]
         override fun getItemId(pos: Int) = pos.toLong()
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
-            val v = convert ?: layoutInflater.inflate(R.layout.item_row, parent, false)
+            val v = convert ?: layoutInflater.inflate(if (grid) R.layout.item_grid else R.layout.item_row, parent, false)
             v.findViewById<ImageView>(R.id.icon).setImageDrawable(Icons.get(this@AppsActivity, shown[pos]))
             v.findViewById<TextView>(R.id.label).text = shown[pos].label
             Ui.paint(v, pos == list.selectedItemPosition)

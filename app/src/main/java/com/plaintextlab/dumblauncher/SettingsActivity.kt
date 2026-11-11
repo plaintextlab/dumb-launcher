@@ -26,6 +26,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Wallpaper from gallery") -> R.drawable.s_image
             title.startsWith("Wallpaper") && title.contains("dimming") -> R.drawable.s_dim
             title.startsWith("Wallpaper") || title.startsWith("Show wallpaper") -> R.drawable.s_wallpaper
+            title.contains("drawer layout") -> R.drawable.s_grid
             title.contains("drawer background") || title.contains("blurred") -> R.drawable.s_blur
             title.startsWith("Hide notification bar") -> R.drawable.s_fullscreen
             title.contains("arrow-key") || title.contains("shortcut") -> R.drawable.s_dpad
@@ -89,6 +90,9 @@ class SettingsActivity : BaseActivity() {
         Row("Show wallpaper on", { Look.WALL_MODES[Prefs.getInt(this, Prefs.WALL_MODE, 0)] }) {
             Ui.choose(this, "Show wallpaper on", Look.WALL_MODES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.WALL_MODE, i); Look.apply(this, false); refresh() } })
+        },
+        Row("App drawer layout", { if (Prefs.getBool(this, Prefs.DRAWER_GRID, true)) "Grid" else "List" }) {
+            toggle(Prefs.DRAWER_GRID, true)
         },
         Row("App drawer background", { Look.DRAWER_MODES[Prefs.getInt(this, Prefs.DRAWER_BG, 0)] }) {
             Ui.choose(this, "App drawer background", Look.DRAWER_MODES.mapIndexed { i, s ->
@@ -155,9 +159,6 @@ class SettingsActivity : BaseActivity() {
                 }
             })
         },
-        Row("Reset menu to defaults", action = {
-            Prefs.resetSlots(this); Toast.makeText(this, "Menu reset", Toast.LENGTH_SHORT).show()
-        }),
         // System
         Row("Key tester", action = { startActivity(Intent(this, KeyTesterActivity::class.java)) }),
         Row("Choose default launcher", action = { Apps.start(this, Intent(Settings.ACTION_HOME_SETTINGS)) }),

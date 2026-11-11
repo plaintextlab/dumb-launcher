@@ -27,19 +27,23 @@ object Usage {
 /**
  * The Home dock shows what keys 1-5 open. A key the user set (Number key shortcuts) shows
  * that app; an unset key is filled automatically with the most-used apps, falling back to
- * the default Menu apps until there is enough history.
+ * the phone's default apps until there is enough history.
  */
 object Dock {
     val KEYS = 1..5
 
     data class Slot(val key: Int, val entry: AppEntry?, val auto: Boolean)
 
+    /** Phone, Messages, Contacts, Camera… used until there is usage history. */
+    private var defaultApps: List<String>? = null
+    private fun defaults(c: Context) = defaultApps ?: Apps.defaultSlots(c).filterNotNull().also { defaultApps = it }
+
     fun enabled(c: Context) = Prefs.getBool(c, Prefs.SHOW_DOCK, true)
 
     fun slots(c: Context): List<Slot> {
         val pinned = KEYS.associateWith { Prefs.get(c, Prefs.num(it)) }
         val taken = pinned.values.filterNotNull().toMutableSet()
-        val candidates = (Usage.ranked(c) + (1..8).mapNotNull { Prefs.get(c, Prefs.slot(it)) })
+        val candidates = (Usage.ranked(c) + defaults(c))
             .filter { it != Prefs.SPECIAL_APPS }
             .distinct()
             .iterator()

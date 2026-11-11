@@ -140,12 +140,6 @@ object Shortcuts {
                         { Prefs.set(a, Prefs.num(n), e.target); done("key $n") }
                 })
             },
-            "Menu slot…" to {
-                Ui.choose(a, "Menu slot", (1..9).map { n ->
-                    "$n  ${Apps.entry(a, Prefs.get(a, Prefs.slot(n)))?.label ?: "empty"}" to
-                        { Prefs.set(a, Prefs.slot(n), e.target); done("Menu slot $n") }
-                })
-            },
         ))
     }
 }

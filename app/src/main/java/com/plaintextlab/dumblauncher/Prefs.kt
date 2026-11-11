@@ -22,12 +22,11 @@ object Prefs {
     const val DRAWER_BG = "drawer_bg"
     const val SHOW_MUSIC = "show_music"
     const val SHOW_DOCK = "show_dock"
+    const val DRAWER_GRID = "drawer_grid"
 
     fun iconOverride(target: String) = "icon:$target"
 
     val DPAD = listOf(UP to "▲ Up", DOWN to "▼ Down", LEFT to "◀ Left", RIGHT to "▶ Right")
-
-    fun slot(n: Int) = "slot$n"
 
     /** Home number-key shortcut 0-9. */
     fun num(n: Int) = "num$n"
@@ -43,15 +42,4 @@ object Prefs {
     fun getBool(c: Context, key: String, def: Boolean) = sp(c).getBoolean(key, def)
     fun setBool(c: Context, key: String, value: Boolean) = sp(c).edit().putBoolean(key, value).apply()
 
-    fun ensureDefaults(c: Context) {
-        if (sp(c).getBoolean("defaults_done", false)) return
-        val e = sp(c).edit()
-        Apps.defaultSlots(c).forEachIndexed { i, v -> e.putString(slot(i + 1), v ?: "") }
-        e.putBoolean("defaults_done", true).apply()
-    }
-
-    fun resetSlots(c: Context) {
-        sp(c).edit().putBoolean("defaults_done", false).apply()
-        ensureDefaults(c)
-    }
 }

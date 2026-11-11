@@ -25,8 +25,7 @@ class HomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         notifs = findViewById(R.id.notifs)
-        findViewById<TextView>(R.id.hint).text = "● Menu    0-9 Dial    hold ● Settings"
-        Prefs.ensureDefaults(this)
+        findViewById<TextView>(R.id.hint).text = "● Apps    0-9 Shortcuts    hold ● Settings"
         // The buttons also work by touch.
         listOf(R.id.musicPrev, R.id.musicPlay, R.id.musicNext).forEach {
             findViewById<View>(it).apply { isFocusable = false; isFocusableInTouchMode = false }
@@ -205,7 +204,7 @@ class HomeActivity : BaseActivity() {
     override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
         val shortPress = event.isTracking && !event.isCanceled
         when {
-            Keys.isOk(code) -> { if (shortPress) startActivity(Intent(this, MenuActivity::class.java)) }
+            Keys.isOk(code) -> { if (shortPress) startActivity(Intent(this, AppsActivity::class.java)) }
             Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
             code == KeyEvent.KEYCODE_BACK -> {}
             else -> return super.onKeyUp(code, event)

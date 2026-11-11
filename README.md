@@ -7,9 +7,8 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → Menu · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
-| **Menu**: 3×3 grid | 1-9 open that cell at once · ● open · hold ● → change/empty a slot |
-| **All apps**: A–Z list | type on the keypad to filter (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search |
+| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) |
+| **All apps**: A–Z grid (or list) | just type on the keypad to search (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
 `*` and `#` are left to the phone's own software.
@@ -32,7 +31,7 @@ The selected icon zooms in, Nokia style.
 | Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next |
 | Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
 | Highlight colour | 10 colours |
-| Animations | On / Off (screen transitions, menu pop-in, list cascade, highlight fade) |
+| Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |
 | Zoom selected icon | On / Off |
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None |
 | Icon style (no pack) | Clean (no white box) / Original |
@@ -41,14 +40,15 @@ The selected icon zooms in, Nokia style.
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |
 | Forget most-used history | resets the automatic dock |
 | Number key shortcuts (0-9) | pick an app, shortcut or activity for each digit |
-| Reset menu, Key tester, Default launcher, Phone settings | |
+| App drawer layout | Grid / List |
+| Key tester, Default launcher, Phone settings | |
 
 **Shortcuts and activities.** In All apps, select an app → hold ● → **Shortcuts…** (the actions other
 launchers show when you hold an icon) or **Activities…** (the app's individual screens). Pick one and
-choose where it goes: the app drawer, a Home arrow key, or a Menu slot. "Add to Home screen" from apps
+choose where it goes: the app drawer, a Home arrow key, or a Home number key. "Add to Home screen" from apps
 (e.g. a Chrome page) also lands in the app drawer. App shortcuts need Dumb Launcher to be the default launcher.
 
-To change a single app's icon, select it in Menu or All apps → hold ● → **Change icon**, then pick
+To change a single app's icon, select it in All apps → hold ● → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
 
 ## Install

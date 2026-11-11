@@ -81,7 +81,7 @@ object Apps {
         Toast.makeText(a, "Not allowed", Toast.LENGTH_SHORT).show(); false
     }
 
-    /** Slots 1-9 of the menu: Phone, Messages, Contacts, Camera, Gallery, Browser, Clock, Settings, All apps. */
+    /** Default apps for the dock: Phone, Messages, Contacts, Camera, Gallery, Browser, Clock, Settings. */
     fun defaultSlots(c: Context): List<String?> {
         val sel = { cat: String -> Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, cat) }
         return listOf(
@@ -93,7 +93,7 @@ object Apps {
             sel(Intent.CATEGORY_APP_BROWSER),
             Intent(AlarmClock.ACTION_SHOW_ALARMS),
             Intent(Settings.ACTION_SETTINGS),
-        ).map { resolve(c, it) } + Prefs.SPECIAL_APPS
+        ).map { resolve(c, it) }
     }
 
     /** Resolve an intent to the launcher component of the app that handles it. */

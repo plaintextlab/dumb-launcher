@@ -62,7 +62,7 @@ abstract class BaseActivity : Activity() {
     open val isHome = false
     open val isDrawer = false
 
-    /** The Menu zooms open (S60 style); other screens slide in from the right. */
+    /** The app drawer zooms open (S60 style); other screens slide in from the right. */
     open val zooms = false
 
     @Suppress("DEPRECATION") // overrideActivityTransition is API 34+; this works on all versions
@@ -70,7 +70,7 @@ abstract class BaseActivity : Activity() {
         super.startActivity(intent, options)
         val target = intent?.component ?: return
         if (target.packageName != packageName || !Anim.on(this)) return
-        val enter = if (target.className == MenuActivity::class.java.name) R.anim.zoom_in else R.anim.slide_in
+        val enter = if (target.className == AppsActivity::class.java.name) R.anim.zoom_in else R.anim.slide_in
         overridePendingTransition(enter, R.anim.hold)
     }
 
