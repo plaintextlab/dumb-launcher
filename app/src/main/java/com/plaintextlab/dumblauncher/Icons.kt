@@ -27,7 +27,21 @@ object Icons {
     private object None
     private val cache = ConcurrentHashMap<String, Any>()   // Drawable, or None for "no icon"
 
-    fun clear() = cache.clear()
+    fun clear() { cache.clear(); art.clear() }
+
+    /** A Start tile's artwork: the white glyph (transparent background) and the app's tile colour. */
+    data class Art(val glyph: Bitmap, val colour: Int)
+    private val art = ConcurrentHashMap<String, Art>()
+
+    /** Loads the glyph and colour for [e] (cached), calling [onReady] on the UI thread. */
+    fun loadArt(c: Context, e: AppEntry, onReady: (Art?) -> Unit) {
+        art[e.target]?.let { onReady(it); return }
+        val app = c.applicationContext
+        Bg.run({
+            val src = picked(app, e) ?: IconPacks.current(app)?.iconFor(e.target) ?: e.icon ?: Apps.rawIcon(app, e.target)
+            src?.let { Art(Metro.glyph(it, SIZE_PX), Metro.colourFor(app, it)).also { a -> art[e.target] = a } }
+        }) { onReady(it) }
+    }
 
     /** Loads now. Fine for a handful of icons; the drawer uses [load] instead. */
     fun get(c: Context, e: AppEntry): Drawable? {

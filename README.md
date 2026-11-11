@@ -7,7 +7,7 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Start** (Metro style, the default): tiles for the clock, calendar, weather, photos, music and your number-key apps | ▲▼◀▶ select a tile · ● OK opens it (or All apps when "all apps" is selected) · 0-9 → your number-key apps · hold ● → Settings · swipe up → All apps |
+| **Start** (Metro style, the default): your pinned tiles: apps, Clock, Calendar, Weather, Photos, Music | ▲▼◀▶ select a tile · ● OK opens it · hold ● → tile menu (Move, Resize, Colour, Unpin, Add a live tile) · in Move: ◀▶ ▲▼ move, ● done · 0-9 → your number-key apps · ☆ → Settings · touch: hold a tile and drag it to rearrange, hold without moving for its menu · swipe up → All apps |
 | **Home** (other icon styles): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up → All apps, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
 | **All apps**: A–Z grid (or list) | just type on the keypad to search (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
@@ -57,6 +57,9 @@ choose where it goes: the app drawer, a Home arrow key, or a Home number key. "A
 
 To change a single app's icon, select it in All apps → hold ● → **Change icon**, then pick
 from a grid of the pack's icons (type on the keypad to search icon names). **Reset icon** undoes it.
+
+Pin any app to Start from All apps → hold ● → **Pin to Start**. Tiles come in four sizes (small 1x1, medium 2x2, wide
+4x2, large 4x4) and any colour: automatic (the app's own), the accent colour, see-through, or one of the palette colours.
 
 To rename an app, select it in All apps → hold ● → **Rename…** and type the new name. The new name
 is used everywhere (drawer, T9 search, dock, Settings). **Reset name** (or saving an empty name) goes

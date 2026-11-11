@@ -134,6 +134,8 @@ class AppsActivity : BaseActivity() {
     /** Re-read the app list (after adding/removing a drawer shortcut). */
     fun reload() = Bg.run({ AppList.refresh(this) }) { all = AppList.cached.orEmpty(); filter() }
 
+    private fun toast(s: String) = android.widget.Toast.makeText(this, s, android.widget.Toast.LENGTH_SHORT).show()
+
     private fun options(e: AppEntry) {
         val extra = Shortcuts.isExtra(e.target)
         val pkg = Shortcuts.packageOf(e.target)
@@ -142,6 +144,9 @@ class AppsActivity : BaseActivity() {
             items += "Shortcuts…" to { Shortcuts.showShortcuts(this, e.target, e.label) }
             items += "Activities…" to { Shortcuts.showActivities(this, e.target, e.label) }
         }
+        if (metro) items.add(0, if (StartTiles.isPinned(this, e.target))
+            "Unpin from Start" to { StartTiles.unpin(this, StartTiles.APP + e.target); toast("Unpinned ${e.label}") }
+        else "Pin to Start" to { StartTiles.pin(this, e.target); toast("${e.label} pinned to Start") })
         if (!metro) items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
         items += "Home number key…" to {
             Ui.choose(this, "Number key", (0..9).map { n ->

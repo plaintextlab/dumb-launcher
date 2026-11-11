@@ -117,21 +117,24 @@ class HomeActivity : BaseActivity() {
     private fun packageOf(i: Intent) = packageManager.resolveActivity(i, 0)?.activityInfo?.packageName
 
     /** A tile was tapped (or its key pressed): swing the tiles out, then open it. */
-    private fun onTile(key: Int) = when (key) {
-        StartScreen.ALL_APPS -> openDrawer()
-        StartScreen.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show() }
-        StartScreen.MUSIC -> leave { Music.open(this) }
-        StartScreen.WEATHER -> {
-            android.widget.Toast.makeText(this, "Updating weather…", android.widget.Toast.LENGTH_SHORT).show()
-            loadLiveTiles(forceWeather = true)
+    private fun onTile(id: String) {
+        val toast = { s: String -> android.widget.Toast.makeText(this, s, android.widget.Toast.LENGTH_SHORT).show() }
+        when (id) {
+            StartScreen.ALL_APPS -> openDrawer()
+            StartTiles.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) toast("No clock app found") }
+            StartTiles.CALENDAR -> leave { if (!Apps.launch(this, Apps.calendar(this))) toast("No calendar app found") }
+            StartTiles.WEATHER -> { toast("Updating weather…"); loadLiveTiles(forceWeather = true) }
+            StartTiles.PHOTOS -> leave {
+                Apps.start(this, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+            StartTiles.MUSIC -> leave {
+                // The playing app if there is one, else the phone's music app.
+                if (shownMusic == null || !Music.open(this)) Apps.start(this,
+                    Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+            else -> id.removePrefix(StartTiles.APP).let { t -> leave { if (!Apps.launch(this, t)) toast("Can't open that app") } }
         }
-        StartScreen.PHOTOS -> leave {
-            val gallery = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY)
-            Apps.start(this, gallery.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }
-        StartScreen.CALENDAR -> leave { if (!Apps.launch(this, Apps.calendar(this))) android.widget.Toast.makeText(this, "No calendar app found", android.widget.Toast.LENGTH_SHORT).show() }
-        in 0..9 -> openNumber(key)
-        else -> openShortcut(Prefs.DPAD[-key - 1].first)
     }
 
     /** In the Metro style, opening something first swings the tiles away. */
@@ -302,7 +305,8 @@ class HomeActivity : BaseActivity() {
             }
         }
         when {
-            Keys.isOk(code) -> options()
+            // Metro: hold OK on a tile = its menu (move, resize, colour, unpin). Settings is on ☆.
+            Keys.isOk(code) -> if (!(metro && start.menuForSelected())) options()
             else -> return super.onKeyLongPress(code, event)
         }
         return true
@@ -329,6 +333,22 @@ class HomeActivity : BaseActivity() {
 
     /** Metro: OK goes to our own handling (tap vs hold), not straight to the selected tile. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (metro && start.moving >= 0) {
+            // Moving a tile: arrows push it through the list (a row is about three tiles); OK or Back ends.
+            val delta = when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> -1; KeyEvent.KEYCODE_DPAD_RIGHT -> 1
+                KeyEvent.KEYCODE_DPAD_UP -> -3; KeyEvent.KEYCODE_DPAD_DOWN -> 3
+                else -> 0
+            }
+            val done = Keys.isOk(event.keyCode) || event.keyCode == KeyEvent.KEYCODE_BACK
+            if (delta != 0 || done) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (delta != 0) start.moveBy(delta)
+                    else { start.stopMoving(); android.widget.Toast.makeText(this, "Tile moved", android.widget.Toast.LENGTH_SHORT).show() }
+                }
+                return true
+            }
+        }
         if (metro && Keys.isOk(event.keyCode)) return event.dispatch(this, window.decorView.keyDispatcherState, this)
         return super.dispatchKeyEvent(event)
     }
