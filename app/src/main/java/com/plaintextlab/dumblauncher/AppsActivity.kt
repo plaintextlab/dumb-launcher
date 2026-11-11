@@ -142,7 +142,7 @@ class AppsActivity : BaseActivity() {
             items += "Shortcuts…" to { Shortcuts.showShortcuts(this, e.target, e.label) }
             items += "Activities…" to { Shortcuts.showActivities(this, e.target, e.label) }
         }
-        items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
+        if (!metro) items += Prefs.DPAD.map { (pref, name) -> "Home $name key" to { Prefs.set(this, pref, e.target) } }
         items += "Home number key…" to {
             Ui.choose(this, "Number key", (0..9).map { n ->
                     "$n  ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label ?: "not set"}" to

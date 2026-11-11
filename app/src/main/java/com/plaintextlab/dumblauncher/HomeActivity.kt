@@ -74,6 +74,9 @@ class HomeActivity : BaseActivity() {
         listOf(R.id.clockBox, R.id.notifs, R.id.spacer, R.id.dpad, R.id.dock).forEach { findViewById<View>(it).visibility = classic }
         if (m) musicView.visibility = View.GONE
         findViewById<View>(R.id.startScroll).visibility = if (m) View.VISIBLE else View.GONE
+        // Classic Home keeps focus off its views (keys are shortcuts); Start lets arrows select tiles.
+        (findViewById<android.view.ViewGroup>(android.R.id.content).getChildAt(0) as android.view.ViewGroup).descendantFocusability =
+            if (m) android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS else android.view.ViewGroup.FOCUS_BLOCK_DESCENDANTS
     }
 
     private fun buildStart(animate: Boolean) {
@@ -87,6 +90,7 @@ class HomeActivity : BaseActivity() {
             android.provider.Telephony.Sms.getDefaultSmsPackage(this)?.let { if (unread > 0) counts[it] = unread }
         }
         start.build(counts, animate)
+        start.restoreFocus()
         start.music(shownMusic)
         if (animate) loadLiveTiles()
     }
@@ -270,7 +274,8 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onKeyDown(code: Int, event: KeyEvent): Boolean {
-        if (Keys.isOk(code) || Keys.dpadPref(code) != null) {
+        // Metro: the arrow keys move the selection between tiles (left to the views), not shortcuts.
+        if (Keys.isOk(code) || (!metro && Keys.dpadPref(code) != null)) {
             event.startTracking(); return true
         }
         if (Keys.handleAppKey(this, code, event)) return true
@@ -288,7 +293,7 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onKeyLongPress(code: Int, event: KeyEvent): Boolean {
-        if (shownMusic != null) {
+        if (shownMusic != null && !metro) {
             when (code) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> { Music.previous(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> { Music.next(this); refreshMusicSoon(); return true }
@@ -306,12 +311,26 @@ class HomeActivity : BaseActivity() {
     override fun onKeyUp(code: Int, event: KeyEvent): Boolean {
         val shortPress = event.isTracking && !event.isCanceled
         when {
-            Keys.isOk(code) -> { if (shortPress) openDrawer() }
-            Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
+            Keys.isOk(code) -> { if (shortPress) { if (metro) openSelected() else openDrawer() } }
+            !metro && Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
             code == KeyEvent.KEYCODE_BACK -> { if (shortPress) hideMusic() }
             else -> return super.onKeyUp(code, event)
         }
         return true
+    }
+
+    /** Metro: OK opens the selected tile (with a press), or All apps if nothing is selected. */
+    private fun openSelected() {
+        val v = currentFocus
+        if (v == null || v === window.decorView) { openDrawer(); return }
+        Turnstile.press(v)
+        v.performClick()
+    }
+
+    /** Metro: OK goes to our own handling (tap vs hold), not straight to the selected tile. */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (metro && Keys.isOk(event.keyCode)) return event.dispatch(this, window.decorView.keyDispatcherState, this)
+        return super.dispatchKeyEvent(event)
     }
 
     private fun openDrawer() = leave { startActivity(Intent(this, AppsActivity::class.java)) }

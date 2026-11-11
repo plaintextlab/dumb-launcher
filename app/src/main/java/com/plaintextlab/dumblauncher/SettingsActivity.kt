@@ -61,7 +61,10 @@ class SettingsActivity : BaseActivity() {
         setContentView(R.layout.activity_apps)
         findViewById<TextView>(R.id.query).text = "settings"
         findViewById<TextView>(R.id.hint).text = "● Change    ↩ Back"
-        rows = buildRows()
+        // In the Metro look the arrow keys select tiles, so the arrow-shortcut settings don't apply.
+        rows = buildRows().filterNot { r ->
+            Metro.on(this) && (r.title.startsWith("Show arrow-key") || (r.title.startsWith("Home ") && r.title.endsWith(" shortcut")))
+        }
         list = findViewById(R.id.list)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, pos, _ -> rows[pos].action() }

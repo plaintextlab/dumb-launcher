@@ -46,7 +46,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     private class Two(val view: View) : Cell() { override val span = 2 }
 
     fun build(counts: Map<String, Int>, animate: Boolean = true) {
-        column.removeAllViews(); rows.clear(); weatherTile = null; photosTile = null
+        column.removeAllViews(); rows.clear(); focusables.clear(); weatherTile = null; photosTile = null
         val width = a.resources.displayMetrics.widthPixels - column.paddingLeft - column.paddingRight
         u = (width - 5 * gap) / 6
 
@@ -75,6 +75,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
             typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
             gravity = Gravity.END; setPadding(0, (10 * dp).toInt(), (6 * dp).toInt(), (20 * dp).toInt())
             setOnClickListener { onOpen(ALL_APPS) }
+            selectable(this)
         }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         if (animate) Turnstile.featherIn(column) else column.layoutAnimation = null
     }
@@ -103,17 +104,14 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         column.addView(v, lp); rows += v
     }
 
-    /** Number keys 1-4 as medium tiles; 5-9, 0 and the arrows as small ones. Empty keys are left out. */
+    /** Number keys 1-4 as medium tiles; 5-9 and 0 as small ones. Empty keys are left out.
+     *  (The arrow keys move the selection here, so they have no apps of their own.) */
     private fun tiles(): List<Tile> {
         val out = mutableListOf<Tile>()
         val dock = if (Dock.enabled(a)) Dock.slots(a).associate { it.key to it.entry } else emptyMap()
         for (n in listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)) {
             val e = dock[n] ?: Apps.entry(a, Prefs.get(a, Prefs.num(n))) ?: continue
             out += Tile(n, e, small = n !in 1..4, tag = "$n")
-        }
-        Prefs.DPAD.forEachIndexed { i, (pref, _) ->
-            val e = Apps.entry(a, Prefs.get(a, pref)) ?: return@forEachIndexed
-            out += Tile(-(i + 1), e, small = true, tag = listOf("▲", "▼", "◀", "▶")[i])
         }
         return out
     }
@@ -132,6 +130,33 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     private fun box(colour: Int) = FrameLayout(a).apply {
         background = ColorDrawable(colour)
         Turnstile.tilt(this)
+        selectable(this)
+    }
+
+    /** Arrow keys move between tiles; the selected one gets a white frame. */
+    private fun selectable(v: View) {
+        v.isFocusable = true
+        v.foreground = android.graphics.drawable.StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_focused), GradientDrawable().apply {
+                setStroke((3 * dp).toInt(), Color.WHITE); setColor(Color.TRANSPARENT)
+            })
+        }
+        v.setOnFocusChangeListener { view, has ->
+            if (has) {
+                lastFocus = focusables.indexOf(view)
+                // Keep the whole tile on screen, with a little room around it.
+                view.post { view.requestRectangleOnScreen(android.graphics.Rect(0, -gap * 3, view.width, view.height + gap * 3)) }
+            }
+        }
+        focusables += v
+    }
+
+    private val focusables = mutableListOf<View>()
+    private var lastFocus = 0
+
+    /** Select the tile that was selected before a rebuild (or the first one). */
+    fun restoreFocus() {
+        (focusables.getOrNull(lastFocus) ?: focusables.firstOrNull())?.requestFocus()
     }
 
     /** See-through tiles let the wallpaper show, like transparent live tiles. */

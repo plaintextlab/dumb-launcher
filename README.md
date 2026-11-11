@@ -7,7 +7,8 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Home**: big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up → All apps, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
+| **Start** (Metro style, the default): tiles for the clock, calendar, weather, photos, music and your number-key apps | ▲▼◀▶ select a tile · ● OK opens it (or All apps when "all apps" is selected) · 0-9 → your number-key apps · hold ● → Settings · swipe up → All apps |
+| **Home** (other icon styles): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK → All apps · 0-9 → your 10 number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up → All apps, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
 | **All apps**: A–Z grid (or list) | just type on the keypad to search (T9: 2-2-6 → Camera) · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 

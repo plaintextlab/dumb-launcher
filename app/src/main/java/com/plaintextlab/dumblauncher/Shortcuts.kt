@@ -131,9 +131,9 @@ object Shortcuts {
         val done = { where: String -> Toast.makeText(a, "Added to $where", Toast.LENGTH_SHORT).show() }
         Ui.choose(a, "Add \"${e.label}\" to", listOf<Pair<String, () -> Any?>>(
             "App drawer" to { addToDrawer(a, e.target); done("app drawer"); (a as? AppsActivity)?.reload() },
-        ) + Prefs.DPAD.map { (pref, name) ->
+        ) + (if (Metro.on(a)) emptyList() else Prefs.DPAD.map { (pref, name) ->   // arrows select tiles in Metro
             "Home $name key" to { Prefs.set(a, pref, e.target); done("$name key") }
-        } + listOf(
+        }) + listOf(
             "Home number key…" to {
                 Ui.choose(a, "Number key", (0..9).map { n ->
                     "$n  ${Apps.entry(a, Prefs.get(a, Prefs.num(n)))?.label ?: "not set"}" to

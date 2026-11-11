@@ -26,6 +26,9 @@ object Metro {
         "Brown" to 0xFF825A2C.toInt(), "Steel" to 0xFF647687.toInt(), "Mauve" to 0xFF76608A.toInt(),
     )
 
+    /** True when the launcher uses the Metro look (tile Start screen; arrow keys select tiles). */
+    fun on(c: Context) = Icons.style(c) == Icons.METRO
+
     fun accent(c: Context) = Prefs.getInt(c, Prefs.HIGHLIGHT, ACCENTS[0].second)
 
     /** Tiles in each app's own colour (default), or all in the accent colour. */
