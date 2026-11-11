@@ -47,18 +47,64 @@ class HomeActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        AppList.warmUp(this)
+        showMode()
+        if (metro) { buildStart(animate = true); return }
         findViewById<View>(R.id.clockBox).visibility =
             if (Prefs.getBool(this, Prefs.SHOW_CLOCK, true)) View.VISIBLE else View.GONE
         refreshStatus()
         refreshShortcuts()
         refreshDock()
-        AppList.warmUp(this)
         Anim.homeArrive(findViewById(R.id.clockBox), notifs)
+    }
+
+    // ---- Metro Start screen (when the icon style is Metro) ----
+
+    private val metro get() = Icons.style(this) == Icons.METRO
+    private val start by lazy { StartScreen(this, findViewById(R.id.startColumn)) { onTile(it) } }
+
+    /** Show either the Start screen or the classic Home. */
+    private fun showMode() {
+        val m = metro
+        val classic = if (m) View.GONE else View.VISIBLE
+        listOf(R.id.clockBox, R.id.notifs, R.id.spacer, R.id.dpad, R.id.dock).forEach { findViewById<View>(it).visibility = classic }
+        if (m) musicView.visibility = View.GONE
+        findViewById<View>(R.id.startScroll).visibility = if (m) View.VISIBLE else View.GONE
+    }
+
+    private fun buildStart(animate: Boolean) {
+        val counts = HashMap<String, Int>()
+        if (Prefs.getBool(this, Prefs.SHOW_COUNTS, true)) {
+            NotifListener.counts.forEach { (pkg, n) -> counts[pkg] = n }
+            val missed = count(Manifest.permission.READ_CALL_LOG, CallLog.Calls.CONTENT_URI,
+                "${CallLog.Calls.TYPE}=${CallLog.Calls.MISSED_TYPE} AND ${CallLog.Calls.NEW}=1")
+            val unread = count(Manifest.permission.READ_SMS, Uri.parse("content://sms/inbox"), "read=0")
+            packageOf(Intent(Intent.ACTION_DIAL))?.let { if (missed > 0) counts[it] = missed }
+            android.provider.Telephony.Sms.getDefaultSmsPackage(this)?.let { if (unread > 0) counts[it] = unread }
+        }
+        start.build(counts, animate)
+        start.music(shownMusic)
+    }
+
+    private fun packageOf(i: Intent) = packageManager.resolveActivity(i, 0)?.activityInfo?.packageName
+
+    /** A tile was tapped (or its key pressed): swing the tiles out, then open it. */
+    private fun onTile(key: Int) = when (key) {
+        StartScreen.ALL_APPS -> openDrawer()
+        StartScreen.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show() }
+        StartScreen.MUSIC -> leave { Music.open(this) }
+        in 0..9 -> openNumber(key)
+        else -> openShortcut(Prefs.DPAD[-key - 1].first)
+    }
+
+    /** In the Metro style, opening something first swings the tiles away. */
+    private fun leave(action: () -> Unit) {
+        if (metro) Turnstile.out(start.rows) { action() } else action()
     }
 
     override fun onStart() {
         super.onStart()
-        NotifListener.onChange = { runOnUiThread { refreshStatus() } }
+        NotifListener.onChange = { runOnUiThread { if (metro) buildStart(animate = false) else refreshStatus() } }
         ticker.post(tick)
         audio.registerAudioDeviceCallback(audioDevices, null)
     }
@@ -208,7 +254,7 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onKeyLongPress(code: Int, event: KeyEvent): Boolean {
-        if (musicView.visibility == View.VISIBLE) {
+        if (shownMusic != null) {
             when (code) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> { Music.previous(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> { Music.next(this); refreshMusicSoon(); return true }
@@ -234,7 +280,7 @@ class HomeActivity : BaseActivity() {
         return true
     }
 
-    private fun openDrawer() = startActivity(Intent(this, AppsActivity::class.java))
+    private fun openDrawer() = leave { startActivity(Intent(this, AppsActivity::class.java)) }
 
     private fun openCallLog() =
         Apps.start(this, Intent(Intent.ACTION_VIEW).setType(CallLog.Calls.CONTENT_TYPE))
@@ -242,7 +288,8 @@ class HomeActivity : BaseActivity() {
     /** Number key [n] (or its dock icon): open its app, or pick one if the key is empty. */
     private fun openNumber(n: Int) {
         val target = if (n in Dock.KEYS && Dock.enabled(this)) Dock.target(this, n) else Prefs.get(this, Prefs.num(n))
-        if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n")
+        if (target == null) { Ui.pick(this, Prefs.num(n), "Pick app for key $n"); return }
+        leave { if (!Apps.launch(this, target)) Ui.pick(this, Prefs.num(n), "Pick app for key $n") }
     }
 
     /** Swipe up anywhere on Home opens All apps. */
@@ -264,10 +311,9 @@ class HomeActivity : BaseActivity() {
     }
 
     private fun openShortcut(pref: String) {
-        if (!Apps.launch(this, Prefs.get(this, pref))) {
-            val name = Prefs.DPAD.first { it.first == pref }.second
-            Ui.pick(this, pref, "Pick app for $name")
-        }
+        val name = Prefs.DPAD.first { it.first == pref }.second
+        val target = Prefs.get(this, pref) ?: run { Ui.pick(this, pref, "Pick app for $name"); return }
+        leave { if (!Apps.launch(this, target)) Ui.pick(this, pref, "Pick app for $name") }
     }
 
     // ---- Music widget: refreshed every second while Home is on screen ----
@@ -290,6 +336,7 @@ class HomeActivity : BaseActivity() {
     private fun refreshMusic() {
         val now = if (Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.visible(Music.now(this)) else null
         shownMusic = now
+        if (metro) { start.music(now); start.tick(); return }
         musicView.visibility = if (now == null) View.GONE else View.VISIBLE
         updateDpadVisibility()
         if (now == null) return

@@ -38,7 +38,20 @@
 
     <include layout="@layout/view_music" />
 
-    <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <!-- Metro style: the tile Start screen replaces everything above and below. -->
+    <ScrollView
+        android:id="@+id/startScroll"
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:scrollbars="none" android:overScrollMode="never" android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/startColumn"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="8dp" android:paddingTop="12dp" />
+    </ScrollView>
+
+    <Space android:id="@+id/spacer" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
     <!-- D-pad cross: shows which app each arrow key opens. -->
     <LinearLayout

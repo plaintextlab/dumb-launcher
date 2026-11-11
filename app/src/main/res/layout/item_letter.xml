@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Letter header in the Metro apps list: the letter in an accent-outlined square. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:paddingHorizontal="16dp" android:paddingTop="10dp" android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="44dp" android:layout_height="44dp"
+        android:gravity="bottom|start" android:paddingStart="6dp" android:paddingBottom="2dp"
+        android:fontFamily="sans-serif-light" android:textSize="24sp"
+        android:includeFontPadding="false" />
+</FrameLayout>

@@ -70,13 +70,26 @@ abstract class BaseActivity : Activity() {
         super.startActivity(intent, options)
         val target = intent?.component ?: return
         if (target.packageName != packageName || !Anim.on(this)) return
+        if (metro) { overridePendingTransition(0, 0); return }   // the new screen swings its own content in
         val enter = if (target.className == AppsActivity::class.java.name) R.anim.zoom_in else R.anim.slide_in
         overridePendingTransition(enter, R.anim.hold)
     }
 
+    private val metro get() = Icons.style(this) == Icons.METRO
+    private var leaving = false
+
     @Suppress("DEPRECATION")
     override fun finish() {
+        if (metro && Anim.on(this) && !leaving && !isHome) {
+            // Metro: swing this screen's rows out, then close without a window animation.
+            leaving = true
+            val root = findViewById<android.view.ViewGroup>(android.R.id.content).getChildAt(0) as? android.view.ViewGroup
+            val rows = root?.let { r -> (0 until r.childCount).map { r.getChildAt(it) } }.orEmpty()
+            Turnstile.out(rows) { super.finish(); overridePendingTransition(0, 0) }
+            return
+        }
         super.finish()
+        if (metro) { overridePendingTransition(0, 0); return }
         if (Anim.on(this)) overridePendingTransition(R.anim.hold, if (zooms) R.anim.zoom_out else R.anim.slide_out)
     }
 

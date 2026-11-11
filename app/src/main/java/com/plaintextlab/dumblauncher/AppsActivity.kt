@@ -29,11 +29,13 @@ class AppsActivity : BaseActivity() {
     }
 
     private lateinit var list: AbsListView
-    private val grid get() = Prefs.getBool(this, Prefs.DRAWER_GRID, true)
+    private val grid get() = Prefs.getBool(this, Prefs.DRAWER_GRID, Icons.style(this) != Icons.METRO)
     private val metro get() = Icons.style(this) == Icons.METRO
     private lateinit var queryView: TextView
     private var all: List<AppEntry> = emptyList()
     private var shown: List<AppEntry> = emptyList()
+    /** What the list shows: apps, and in the Metro list also letter headers (Strings). */
+    private var rows: List<Any> = emptyList()
     private var query = ""
     private val pickPref get() = intent.getStringExtra(EXTRA_PREF)
 
@@ -48,8 +50,8 @@ class AppsActivity : BaseActivity() {
         list.visibility = View.VISIBLE
         findViewById<View>(if (grid) R.id.list else R.id.grid).visibility = View.GONE
         list.adapter = adapter
-        list.setOnItemClickListener { _, _, pos, _ -> choose(shown[pos]) }
-        list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) options(shown[pos]); true }
+        list.setOnItemClickListener { _, _, pos, _ -> (rows[pos] as? AppEntry)?.let { choose(it) } }
+        list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) (rows[pos] as? AppEntry)?.let { options(it) }; true }
         Ui.trackHighlight(list)
         Anim.cascade(list)
         // Show the remembered list at once; re-read installed apps in the background.
@@ -62,20 +64,39 @@ class AppsActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         adapter.notifyDataSetChanged() // an icon may have changed
+        Turnstile.reset(screenRows())     // after swinging out to open an app
     }
 
     private fun filter() {
         shown = all.filter { it.matches(query) }
+        rows = if (metro && !grid && query.isEmpty()) withLetters(shown) else shown
         val title = (intent.getStringExtra(EXTRA_TITLE) ?: "apps").lowercase()
         queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
         adapter.notifyDataSetChanged()
         list.requestFocus()
-        list.setSelection(0)
+        list.setSelection(rows.indexOfFirst { it is AppEntry }.coerceAtLeast(0))
     }
+
+    /** Apps A-Z with a letter header before each new first letter (# for digits and symbols). */
+    private fun withLetters(apps: List<AppEntry>): List<Any> {
+        val out = ArrayList<Any>(apps.size + 27)
+        var last: String? = null
+        for (e in apps) {
+            val c = e.label.firstOrNull()?.lowercaseChar()
+            val letter = if (c != null && c.isLetter()) c.toString() else "#"
+            if (letter != last) { out += letter; last = letter }
+            out += e
+        }
+        return out
+    }
+
+    /** The title and the visible list rows, for the turnstile. */
+    private fun screenRows(): List<View> = listOf<View>(queryView) + (0 until list.childCount).map { list.getChildAt(it) }
 
     private fun choose(e: AppEntry) {
         val pref = pickPref
         if (pref != null) { Prefs.set(this, pref, e.target); finish() }
+        else if (metro) Turnstile.out(screenRows()) { Apps.launch(this, e.target) }
         else Apps.launch(this, e.target)
     }
 
@@ -154,19 +175,36 @@ class AppsActivity : BaseActivity() {
         if (Keys.isDelete(code) && query.isNotEmpty()) { query = query.dropLast(1); filter(); return true }
         if (code == KeyEvent.KEYCODE_BACK && query.isNotEmpty()) { query = ""; filter(); return true }
         if (Keys.isOptions(code) && pickPref == null) {
-            shown.getOrNull(list.selectedItemPosition)?.let { options(it) }; return true
+            (rows.getOrNull(list.selectedItemPosition) as? AppEntry)?.let { options(it) }; return true
         }
         return super.onKeyDown(code, event)
     }
 
     private val adapter = object : BaseAdapter() {
-        override fun getCount() = shown.size
-        override fun getItem(pos: Int) = shown[pos]
+        override fun getCount() = rows.size
+        override fun getItem(pos: Int) = rows[pos]
         override fun getItemId(pos: Int) = pos.toLong()
+        override fun getViewTypeCount() = 2
+        override fun getItemViewType(pos: Int) = if (rows[pos] is AppEntry) 0 else 1
+        override fun areAllItemsEnabled() = rows.all { it is AppEntry }
+        override fun isEnabled(pos: Int) = rows[pos] is AppEntry
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
+            val item = rows[pos]
+            if (item is String) {   // letter header
+                val h = convert ?: layoutInflater.inflate(R.layout.item_letter, parent, false)
+                h.findViewById<TextView>(R.id.label).apply {
+                    text = item
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        setStroke((2 * resources.displayMetrics.density).toInt(), Metro.accent(context))
+                    }
+                    setTextColor(Metro.accent(context))
+                }
+                return h
+            }
             val v = convert ?: layoutInflater.inflate(
-                if (!grid) R.layout.item_row else if (metro) R.layout.item_tile else R.layout.item_grid, parent, false)
-            val e = shown[pos]
+                if (!grid) (if (metro) R.layout.item_metro_row else R.layout.item_row)
+                else if (metro) R.layout.item_tile else R.layout.item_grid, parent, false)
+            val e = item as AppEntry
             val iv = v.findViewById<ImageView>(R.id.icon)
             iv.tag = e.target
             Icons.load(this@AppsActivity, e) { d, instant ->
@@ -174,7 +212,7 @@ class AppsActivity : BaseActivity() {
                 iv.setImageDrawable(d)
                 if (!instant && Anim.on(iv.context)) { iv.alpha = 0f; iv.animate().alpha(1f).setDuration(150).start() }
             }
-            v.findViewById<TextView>(R.id.label).text = shown[pos].label
+            v.findViewById<TextView>(R.id.label).text = e.label
             Ui.paint(v, pos == list.selectedItemPosition)
             return v
         }

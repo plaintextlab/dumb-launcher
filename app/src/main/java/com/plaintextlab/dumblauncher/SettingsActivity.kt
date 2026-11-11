@@ -93,8 +93,8 @@ class SettingsActivity : BaseActivity() {
             Ui.choose(this, "Show wallpaper on", Look.WALL_MODES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.WALL_MODE, i); Look.apply(this, false); refresh() } })
         },
-        Row("App drawer layout", { if (Prefs.getBool(this, Prefs.DRAWER_GRID, true)) "Grid" else "List" }) {
-            toggle(Prefs.DRAWER_GRID, true)
+        Row("App drawer layout", { if (Prefs.getBool(this, Prefs.DRAWER_GRID, Icons.style(this) != Icons.METRO)) "Grid" else "List" }) {
+            toggle(Prefs.DRAWER_GRID, Icons.style(this) != Icons.METRO)
         },
         Row("App drawer background", { Look.DRAWER_MODES[Prefs.getInt(this, Prefs.DRAWER_BG, 0)] }) {
             Ui.choose(this, "App drawer background", Look.DRAWER_MODES.mapIndexed { i, s ->
