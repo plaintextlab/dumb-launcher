@@ -52,9 +52,71 @@ object Metro {
 
         val px = IntArray(size * size)
         bmp.getPixels(px, 0, size, 0, 0, size, size)
-        whiten(px, keepShape = mono != null || mostlyWhite(px))
+        val original = px.copyOf()
+        val plate = if (mono == null) plateColour(px, size) else null
+        if (plate != null) unplate(px, plate)              // symbol on its own disc / square
+        if (plate == null || px.count { Color.alpha(it) > 24 } < px.size / 100) {
+            original.copyInto(px)                          // no plate, or nothing left on it
+            whiten(px, keepShape = mono != null || mostlyWhite(px))
+        }
         bmp.setPixels(px, 0, size, 0, 0, size, size)
-        return bmp
+        return fit(bmp, px, size)
+    }
+
+    /** Crop the glyph to what is drawn and scale it so every glyph has the same size. */
+    private fun fit(src: Bitmap, px: IntArray, size: Int): Bitmap {
+        var l = size; var t = size; var r = -1; var b = -1
+        for (y in 0 until size) for (x in 0 until size) {
+            if (Color.alpha(px[y * size + x]) > 24) {
+                if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y
+            }
+        }
+        if (r < l || b < t) return src
+        val w = r - l + 1f; val h = b - t + 1f
+        val target = size * 0.46f
+        val k = minOf(target / maxOf(w, h), 2.5f)
+        val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val dw = w * k; val dh = h * k
+        val dst = android.graphics.RectF((size - dw) / 2, (size - dh) / 2, (size + dw) / 2, (size + dh) / 2)
+        Canvas(out).drawBitmap(src, android.graphics.Rect(l, t, r + 1, b + 1), dst, Paint(Paint.FILTER_BITMAP_FLAG))
+        src.recycle()
+        return out
+    }
+
+    /**
+     * If the artwork is a symbol drawn on its own solid disc or square (most older icons), the
+     * colour of that plate; else null. Detected by the drawn area filling most of its bounds
+     * and one colour covering most of it.
+     */
+    fun plateColour(px: IntArray, size: Int): Int? {
+        var l = size; var t = size; var r = -1; var b = -1; var opaque = 0
+        val counts = HashMap<Int, Int>()
+        for (y in 0 until size) for (x in 0 until size) {
+            val p = px[y * size + x]
+            if (Color.alpha(p) < 200) continue
+            opaque++
+            if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y
+            val q = (p and 0xF0F0F0)                      // group near-identical colours
+            counts[q] = (counts[q] ?: 0) + 1
+        }
+        if (opaque == 0) return null
+        val fill = opaque.toFloat() / ((r - l + 1) * (b - t + 1))
+        val (top, n) = counts.maxByOrNull { it.value } ?: return null
+        if (fill < 0.75f || n < opaque * 0.45f) return null
+        return top or 0xFF080808.toInt()
+    }
+
+    /** Keep only what differs from the plate colour, as white. */
+    fun unplate(px: IntArray, plate: Int) {
+        for (i in px.indices) {
+            val p = px[i]
+            val a = Color.alpha(p)
+            if (a == 0) continue
+            val d = (kotlin.math.abs(Color.red(p) - Color.red(plate)) +
+                kotlin.math.abs(Color.green(p) - Color.green(plate)) +
+                kotlin.math.abs(Color.blue(p) - Color.blue(plate))) / 3f
+            px[i] = Color.argb((a * smooth(18f, 60f, d)).toInt(), 255, 255, 255)
+        }
     }
 
     /**
