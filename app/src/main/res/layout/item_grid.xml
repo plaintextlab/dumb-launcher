@@ -4,7 +4,7 @@
     android:orientation="vertical" android:gravity="center"
     android:clipChildren="false"
     android:paddingHorizontal="@dimen/space_xs"
-    android:paddingTop="18dp" android:paddingBottom="@dimen/space_m">
+    android:paddingTop="@dimen/space_l" android:paddingBottom="@dimen/space_m">
     <!-- Top padding and the label gap leave room for the zoomed (1.2x) icon inside the highlight. -->
 
     <ImageView android:id="@+id/icon" android:layout_width="52dp" android:layout_height="52dp" />

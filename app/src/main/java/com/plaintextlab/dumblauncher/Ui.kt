@@ -38,12 +38,16 @@ object Ui {
             Anim.zoom(icon, s, animate)
         }
         val colour = Prefs.getInt(v.context, Prefs.HIGHLIGHT, COLOURS[0].second)
+        // Setting a background resets padding to the drawable's own (the inset), so keep the view's.
+        val pad = intArrayOf(v.paddingLeft, v.paddingTop, v.paddingRight, v.paddingBottom)
         if (selected) {
             val bg = highlight(v, colour)
             v.background = bg
+            v.setPadding(pad[0], pad[1], pad[2], pad[3])
             if (animate) Anim.fadeIn(bg, v.context)
         } else {
             v.background = null
+            v.setPadding(pad[0], pad[1], pad[2], pad[3])
         }
         val text = if (selected) readableOn(colour) else v.context.getColor(R.color.fg)
         v.findViewById<TextView>(R.id.label)?.setTextColor(text)
