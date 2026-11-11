@@ -12,12 +12,16 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Picks the icon for an app, in this order:
- * 1. an icon the user picked for that app, 2. the selected icon pack, 3. the system icon.
+ * 1. an icon the user picked for that app, 2. the selected icon pack, 3. the system icon,
+ * restyled by the pack (its iconback / mask) if it has one, else drawn in the chosen style.
  * Many OEM system icons are adaptive icons with a white background layer; the "Clean"
  * style draws only the foreground layer so there is no white box.
  */
 object Icons {
-    val STYLES = listOf("Clean (no white box)", "Original")
+    /** Stored as the index; Tiles is the default. */
+    val STYLES = listOf("Clean (no white box)", "Original", "Tiles (same shape and size)")
+    const val TILES = 2
+    fun style(c: Context) = Prefs.getInt(c, Prefs.ICON_STYLE, TILES)
     private const val SIZE_PX = 144
     private object None
     private val cache = ConcurrentHashMap<String, Any>()   // Drawable, or None for "no icon"
@@ -46,12 +50,17 @@ object Icons {
             val (pkg, name) = saved.split('|', limit = 2).let { it[0] to it.getOrElse(1) { "" } }
             IconPacks.get(c, pkg)?.drawable(name)?.let { return it }
         }
-        IconPacks.current(c)?.iconFor(e.target)?.let { return it }
-        return system(c, e.icon ?: Apps.rawIcon(c, e.target))
+        val pack = IconPacks.current(c)
+        pack?.iconFor(e.target)?.let { return it }
+        val raw = e.icon ?: Apps.rawIcon(c, e.target) ?: return null
+        // Apps the pack has no icon for: style them the way the pack says, so they still match.
+        pack?.restyle(raw, e.target, SIZE_PX)?.let { return BitmapDrawable(c.resources, it) }
+        if (style(c) == TILES) return BitmapDrawable(c.resources, Tiles.render(raw, SIZE_PX))
+        return system(c, raw)
     }
 
     private fun system(c: Context, icon: Drawable?): Drawable? {
-        val clean = Prefs.getInt(c, Prefs.ICON_STYLE, 0) == 0
+        val clean = style(c) == 0
         if (!clean || icon !is AdaptiveIconDrawable || icon.foreground == null) return icon
         val bmp = Bitmap.createBitmap(SIZE_PX, SIZE_PX, Bitmap.Config.ARGB_8888)
         val fg = icon.foreground.mutate()

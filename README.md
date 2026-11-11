@@ -34,8 +34,8 @@ The selected icon zooms in, Nokia style.
 | Highlight colour | 10 colours |
 | Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |
 | Zoom selected icon | On / Off |
-| Icon pack | any installed ADW / Nova / Apex-format pack, or None |
-| Icon style (no pack) | Clean (no white box) / Original |
+| Icon pack | any installed ADW / Nova / Apex-format pack, or None. Apps the pack has no icon for are put on the pack's own backing shape (if the pack has one), so they still match |
+| Icon style | **Tiles** (default: every app on the same glossy rounded tile, same size) / Clean (no white box) / Original |
 | Home ▲▼◀▶ shortcuts | pick an app for each |
 | Dock on Home (keys 1-5) | On / Off. Bottom row showing the apps on keys 1-5 |
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |

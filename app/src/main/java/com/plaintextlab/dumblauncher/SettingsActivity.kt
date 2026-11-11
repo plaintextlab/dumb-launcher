@@ -124,7 +124,7 @@ class SettingsActivity : BaseActivity() {
         Row("Zoom selected icon", { onOff(Prefs.ZOOM, true) }) { toggle(Prefs.ZOOM, true) },
         // Icons
         Row("Icon pack", { IconPacks.current(this)?.label ?: "None" }) { Icons.choosePack(this) { refresh() } },
-        Row("Icon style (no pack)", { Icons.STYLES[Prefs.getInt(this, Prefs.ICON_STYLE, 0)] }) {
+        Row("Icon style", { Icons.STYLES[Icons.style(this)] }) {
             Ui.choose(this, "Icon style", Icons.STYLES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Icons.clear(); refresh() } })
         },
