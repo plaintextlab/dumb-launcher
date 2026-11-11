@@ -27,7 +27,11 @@ object Icons {
     private object None
     private val cache = ConcurrentHashMap<String, Any>()   // Drawable, or None for "no icon"
 
-    fun clear() { cache.clear(); art.clear() }
+    /** Goes up whenever icons may look different (so Start knows to redraw). */
+    @Volatile var version = 0
+        private set
+
+    fun clear() { cache.clear(); art.clear(); version++ }
 
     /** A Start tile's artwork: the white glyph (transparent background) and the app's tile colour. */
     data class Art(val glyph: Bitmap, val colour: Int)
@@ -97,7 +101,7 @@ object Icons {
 
     fun setOverride(c: Context, target: String, pkg: String?, name: String?) {
         Prefs.set(c, Prefs.iconOverride(target), if (pkg == null) null else "$pkg|$name")
-        cache.remove(target)
+        cache.remove(target); art.remove(target); version++
     }
 
     /** Let the user pick an icon for one app: choose the pack (if several), then the icon. */

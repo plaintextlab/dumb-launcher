@@ -25,13 +25,19 @@ object AppList {
     @Volatile var cached: List<AppEntry>? = null
         private set
 
+    /** Goes up whenever the list of apps or their names change (so Start knows to redraw). */
+    @Volatile var version = 0
+        private set
+
     /** Re-read the installed apps (background thread). Returns true if anything changed. */
     fun refresh(c: Context): Boolean {
         val fresh = Apps.all(c.applicationContext)
         fresh.forEach { it.t9 }          // work out the T9 codes here, not while typing
         val old = cached
         cached = fresh
-        return old == null || old.map { it.target to it.label } != fresh.map { it.target to it.label }
+        val changed = old == null || old.map { it.target to it.label } != fresh.map { it.target to it.label }
+        if (changed) version++
+        return changed
     }
 
     @Volatile private var lastWarm = 0L

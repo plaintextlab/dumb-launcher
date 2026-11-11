@@ -66,7 +66,9 @@ class HomeActivity : BaseActivity() {
     // ---- Metro Start screen (when the icon style is Metro) ----
 
     private val metro get() = Icons.style(this) == Icons.METRO
-    private val start by lazy { StartScreen(this, findViewById(R.id.startColumn)) { onTile(it) } }
+    private val start by lazy {
+        StartScreen(this, findViewById(R.id.startColumn)) { onTile(it) }.also { it.onNeedData = { loadLiveTiles(forceMedia = true) } }
+    }
 
     /** Show either the Start screen or the classic Home. */
     private fun showMode() {
@@ -97,8 +99,14 @@ class HomeActivity : BaseActivity() {
     }
 
     /** Weather (cached at once, refreshed online when old) and recent photos, off the UI thread. */
-    private fun loadLiveTiles(forceWeather: Boolean = false) {
+    private var lastMediaLoad = 0L
+
+    private fun loadLiveTiles(forceWeather: Boolean = false, forceMedia: Boolean = false) {
         val app = applicationContext
+        // Photos and contact pictures: at most every 10 minutes (they are slow to read and rarely change).
+        val nowMs = android.os.SystemClock.elapsedRealtime()
+        val media = forceMedia || lastMediaLoad == 0L || nowMs - lastMediaLoad > 10 * 60_000
+        if (media) lastMediaLoad = nowMs
         if (Weather.enabled(this)) {
             start.weather(Weather.cached(this))
             Thread {
@@ -106,14 +114,14 @@ class HomeActivity : BaseActivity() {
                 runOnUiThread { start.weather(w) }
             }.start()
         }
-        if (Photos.enabled(this)) {
+        if (media && Photos.enabled(this)) {
             val px = (resources.displayMetrics.widthPixels * 0.66f).toInt()
             Thread {
                 val thumbs = Photos.recent(app, 8).mapNotNull { Photos.thumb(app, it, px / 2) }
                 runOnUiThread { start.photos(thumbs) }
             }.start()
         }
-        if (People.hasPermission(this)) Thread {
+        if (media && People.hasPermission(this)) Thread {
             val faces = People.faces(app, 27)
             runOnUiThread { start.people(faces) }
         }.start()
@@ -146,7 +154,10 @@ class HomeActivity : BaseActivity() {
                 if (shownMusic == null || !Music.open(this)) Apps.start(this,
                     Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
-            else -> id.removePrefix(StartTiles.APP).let { t -> leave { if (!Apps.launch(this, t)) toast("Can't open that app") } }
+            else -> id.removePrefix(StartTiles.APP).let { t ->
+                if (Apps.entry(this, t) == null) toast("That app is not installed. Hold the tile to unpin it.")
+                else leave { if (!Apps.launch(this, t)) toast("Can't open that app") }
+            }
         }
     }
 
@@ -170,7 +181,7 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onRequestPermissionsResult(code: Int, perms: Array<out String>, results: IntArray) {
-        if (metro) { buildStart(animate = false); loadLiveTiles() } else refreshStatus()
+        if (metro) { buildStart(animate = false); loadLiveTiles(forceMedia = true) } else refreshStatus()
     }
 
     private fun refreshStatus() {
@@ -329,7 +340,7 @@ class HomeActivity : BaseActivity() {
         when {
             Keys.isOk(code) -> { if (shortPress) { if (metro) openSelected() else openDrawer() } }
             !metro && Keys.dpadPref(code) != null -> { if (shortPress) openShortcut(Keys.dpadPref(code)!!) }
-            code == KeyEvent.KEYCODE_BACK -> { if (shortPress) hideMusic() }
+            code == KeyEvent.KEYCODE_BACK -> { if (shortPress) { if (metro) start.toTop() else hideMusic() } }
             else -> return super.onKeyUp(code, event)
         }
         return true
@@ -411,7 +422,12 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
-        swipe.onTouchEvent(ev)
+        if (swipe.onTouchEvent(ev)) {
+            // A swipe, not a tap: cancel the touch so the tile or app under the finger doesn't open too.
+            ev.action = android.view.MotionEvent.ACTION_CANCEL
+            super.dispatchTouchEvent(ev)
+            return true
+        }
         return super.dispatchTouchEvent(ev)
     }
 
@@ -439,7 +455,7 @@ class HomeActivity : BaseActivity() {
     private fun refreshMusicSoon() = ticker.postDelayed({ refreshMusic() }, 350)
 
     private fun refreshMusic() {
-        val now = if (Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.visible(Music.now(this)) else null
+        val now = if (metro || Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.visible(Music.now(this)) else null
         shownMusic = now
         if (metro) { start.music(now); start.tick(); return }
         musicView.visibility = if (now == null) View.GONE else View.VISIBLE

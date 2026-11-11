@@ -51,10 +51,21 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     private val live = HashMap<String, Pair<FrameLayout, Size>>()
 
     private lateinit var grid: FrameLayout
+    private var lastSig: String? = null
 
     fun build(counts: Map<String, Int>, animate: Boolean = true) {
         this.counts = counts
         if (dragFrom >= 0) return          // not while a tile is being dragged; rebuilt when it lands
+        // Nothing changed since last time (the usual case when coming back Home): keep the tiles
+        // as they are and only swing them in. Rebuilding every time made returning Home stutter.
+        val sig = listOf(Prefs.get(a, "start_tiles"), counts, keyNumbers(), Metro.accent(a), Metro.appColours(a),
+            Icons.version, AppList.version, a.resources.displayMetrics.widthPixels).toString()
+        if (sig == lastSig && ::grid.isInitialized && grid.parent === column) {
+            Turnstile.reset(rows)
+            if (animate) Turnstile.featherIn(column) { rows.toList() }
+            return
+        }
+        lastSig = sig
         specs = StartTiles.load(a)
         column.removeAllViews(); rows.clear(); tileViews.clear(); live.clear()
         val width = a.resources.displayMetrics.widthPixels - column.paddingLeft - column.paddingRight
@@ -139,10 +150,10 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         Turnstile.tilt(v)
         selectable(v, s.id)
         v.setOnClickListener { open(s.id) }
-        v.setOnLongClickListener { startDrag(v, index); true }
+        v.setOnLongClickListener { v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS); startDrag(v, index); true }
         val target = s.target
         if (target != null) appTile(v, s, target, keys[target])
-        else { live[s.id] = v to s.size; fillLive(s.id) }
+        else { v.contentDescription = StartTiles.liveName(s.id); live[s.id] = v to s.size; fillLive(s.id) }
         return v
     }
 
@@ -424,6 +435,26 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
     private var targets: List<Rect> = emptyList()   // each tile's place in the current preview (by spec index)
     private val dwell = android.os.Handler(android.os.Looper.getMainLooper())
 
+    /** Called when a live tile was added and its photos / pictures need loading. */
+    var onNeedData: (() -> Unit)? = null
+
+    /** Back on Start: scroll to the top and select the first tile, as on a tile phone. */
+    fun toTop() {
+        (column.parent as? android.widget.ScrollView)?.smoothScrollTo(0, 0)
+        rows.firstOrNull()?.requestFocus()
+    }
+
+    /** While dragging near the top or bottom of the screen, scroll Start so the tile can go further. */
+    private fun edgeScroll(y: Float) {
+        val sv = column.parent as? android.widget.ScrollView ?: return
+        val inView = grid.top + column.top + y - sv.scrollY
+        val edge = 56 * dp
+        when {
+            inView > sv.height - edge -> sv.scrollBy(0, (12 * dp).toInt())
+            inView < edge -> sv.scrollBy(0, -(12 * dp).toInt())
+        }
+    }
+
     private fun startDrag(v: View, index: Int) {
         dragFrom = index; dragTo = index; dragMoved = false; pending = -1
         targets = rectsFor(order(index, index))
@@ -471,6 +502,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         if (e.localState !is Int || dragFrom < 0) return@OnDragListener false
         when (e.action) {
             DragEvent.ACTION_DRAG_LOCATION -> {
+                edgeScroll(e.y)
                 val spot = spotAt(e.x.toInt(), e.y.toInt())
                 if (spot == null || spot == dragTo) { pending = -1; dwell.removeCallbacksAndMessages(null) }
                 else if (spot != pending) {
@@ -510,6 +542,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
             val lp = v.layoutParams as FrameLayout.LayoutParams
             (v.tag as String) to (lp.leftMargin + v.translationX to lp.topMargin + v.translationY)
         }
+        lastSig = null
         build(counts, animate = false); restoreFocus()
         if (!Anim.on(a)) return
         tileViews.forEach { v ->
@@ -565,7 +598,7 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         val missing = StartTiles.missingLive(a)
         if (missing.isNotEmpty()) items += "Add a live tile…" to {
             Ui.choose(a, "Add to Start", missing.map { id -> StartTiles.liveName(id) to {
-                StartTiles.addLive(a, id); focusId = id; rebuild()
+                StartTiles.addLive(a, id); focusId = id; rebuild(); onNeedData?.invoke()
                 if (id == StartTiles.PEOPLE && !People.hasPermission(a)) a.requestPermissions(arrayOf(People.permission), 2)
             } })
         }

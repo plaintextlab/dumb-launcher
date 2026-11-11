@@ -61,9 +61,11 @@ class SettingsActivity : BaseActivity() {
         setContentView(R.layout.activity_apps)
         findViewById<TextView>(R.id.query).text = "settings"
         findViewById<TextView>(R.id.hint).text = "● Change    ↩ Back"
-        // In the Metro look the arrow keys select tiles, so the arrow-shortcut settings don't apply.
+        // In the Metro look Start is made of the user's own tiles and the arrows select them, so the
+        // classic Home settings (arrow shortcuts, big clock, dock, music widget) don't apply: hide them.
+        val classicOnly = listOf("Show arrow-key", "Clock on Home", "Dock on Home", "Dock apps", "Music widget on Home")
         rows = buildRows().filterNot { r ->
-            Metro.on(this) && (r.title.startsWith("Show arrow-key") || (r.title.startsWith("Home ") && r.title.endsWith(" shortcut")))
+            Metro.on(this) && (classicOnly.any { r.title.startsWith(it) } || (r.title.startsWith("Home ") && r.title.endsWith(" shortcut")))
         }
         list = findViewById(R.id.list)
         list.adapter = adapter
@@ -186,7 +188,7 @@ class SettingsActivity : BaseActivity() {
         Row("Number key shortcuts (1-9; 0 opens All apps)", { "${(1..9).count { Prefs.get(this, Prefs.num(it)) != null }} of 9 set" }) {
             Ui.choose(this, "Number key shortcuts", (1..9).map { n ->
                 "$n   ${Apps.entry(this, Prefs.get(this, Prefs.num(n)))?.label
-                    ?: if (n in Dock.KEYS && Dock.enabled(this)) "auto (dock)" else "not set"}" to {
+                    ?: if (!Metro.on(this) && n in Dock.KEYS && Dock.enabled(this)) "auto (dock)" else "not set"}" to {
                     Ui.choose(this, "Key $n", listOf(
                         "Choose app or shortcut" to { Ui.pick(this, Prefs.num(n), "Pick app for key $n") },
                         "Clear" to { Prefs.set(this, Prefs.num(n), null); refresh() },

@@ -76,6 +76,8 @@ class AppsActivity : BaseActivity() {
         val rank = if (byUse) Usage.ranked(this).withIndex().associate { it.value to it.index } else emptyMap()
         shown = all.filter { it.matches(query) }
             .let { l -> if (byUse) l.sortedBy { rank[it.target] ?: Int.MAX_VALUE } else l }
+            // Searching: apps whose name starts with what you typed come before ones that match a later word.
+            .let { l -> if (query.isEmpty()) l else l.sortedBy { if (it.t9.firstOrNull()?.startsWith(query) == true) 0 else 1 } }
         rows = if (metro && !grid && query.isEmpty() && !byUse) withLetters(shown) else shown
         val q = typed ?: query
         if (metroList) {
@@ -158,7 +160,12 @@ class AppsActivity : BaseActivity() {
     }
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
-        swipe.onTouchEvent(ev)
+        if (swipe.onTouchEvent(ev)) {
+            // A swipe, not a tap: cancel the touch so the tile or app under the finger doesn't open too.
+            ev.action = android.view.MotionEvent.ACTION_CANCEL
+            super.dispatchTouchEvent(ev)
+            return true
+        }
         return super.dispatchTouchEvent(ev)
     }
 
@@ -201,12 +208,16 @@ class AppsActivity : BaseActivity() {
         val d = resources.displayMetrics.density
         val accent = Metro.accent(this)
         val dialog = android.app.Dialog(this, android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen)
-        val cell = ((resources.displayMetrics.widthPixels - 16 * d - 3 * 8 * d) / 4).toInt()
+        // Square letters, 4 across, as big as fits both the width and the height (7 rows).
+        val dm = resources.displayMetrics
+        val cell = minOf((dm.widthPixels - 16 * d - 3 * 8 * d) / 4, (dm.heightPixels - 56 * d - 6 * 8 * d) / 7).toInt()
+        val side = ((dm.widthPixels - 4 * cell - 3 * 8 * d) / 2).toInt()
         val grid = android.widget.GridView(this).apply {
             numColumns = 4
             horizontalSpacing = (8 * d).toInt(); verticalSpacing = (8 * d).toInt()
-            setPadding((8 * d).toInt(), (16 * d).toInt(), (8 * d).toInt(), (16 * d).toInt())
+            setPadding(side, (16 * d).toInt(), side, (16 * d).toInt())
             clipToPadding = false
+            stretchMode = android.widget.GridView.NO_STRETCH; columnWidth = cell
             selector = android.graphics.drawable.GradientDrawable().apply {
                 setStroke((3 * d).toInt(), android.graphics.Color.WHITE); setColor(android.graphics.Color.TRANSPARENT)
             }
