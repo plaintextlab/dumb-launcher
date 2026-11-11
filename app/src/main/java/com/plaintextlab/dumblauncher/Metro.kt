@@ -28,6 +28,13 @@ object Metro {
 
     fun accent(c: Context) = Prefs.getInt(c, Prefs.HIGHLIGHT, ACCENTS[0].second)
 
+    /** Tiles in each app's own colour (default), or all in the accent colour. */
+    fun appColours(c: Context) = Prefs.getBool(c, Prefs.TILE_COLOURS, true)
+
+    /** The tile colour for [icon]: the app's own colour if that setting is on and it has one. */
+    fun colourFor(c: Context, icon: Drawable): Int =
+        (if (appColours(c)) Tiles.appColour(icon) else null) ?: accent(c)
+
     /** A square tile: [accent] background, the app's glyph in white, about half the tile. */
     fun tile(icon: Drawable, size: Int, accent: Int): Bitmap {
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)

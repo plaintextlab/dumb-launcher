@@ -54,6 +54,7 @@ class AppsActivity : BaseActivity() {
         list.setOnItemLongClickListener { _, _, pos, _ -> if (pickPref == null) (rows[pos] as? AppEntry)?.let { options(it) }; true }
         Ui.trackHighlight(list)
         Anim.cascade(list)
+        if (metroList) searchBox()
         // Show the remembered list at once; re-read installed apps in the background.
         AppList.cached?.let { all = it; filter() }
         Bg.run({ AppList.refresh(this) }) { changed ->
@@ -70,8 +71,15 @@ class AppsActivity : BaseActivity() {
     private fun filter() {
         shown = all.filter { it.matches(query) }
         rows = if (metro && !grid && query.isEmpty()) withLetters(shown) else shown
-        val title = (intent.getStringExtra(EXTRA_TITLE) ?: "apps").lowercase()
-        queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
+        if (metroList) {
+            // Search box: the hint (or what you are picking for) until you type, then the digits.
+            val hint = intent.getStringExtra(EXTRA_TITLE) ?: "Search apps"
+            queryView.text = if (query.isEmpty()) hint else "$query   (${shown.size})"
+            queryView.setTextColor(getColor(if (query.isEmpty()) R.color.dim else R.color.fg))
+        } else {
+            val title = (intent.getStringExtra(EXTRA_TITLE) ?: "apps").lowercase()
+            queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
+        }
         adapter.notifyDataSetChanged()
         list.requestFocus()
         val first = rows.indexOfFirst { it is AppEntry }.coerceAtLeast(0)
@@ -79,6 +87,24 @@ class AppsActivity : BaseActivity() {
         // Keep a letter header above the first app visible, instead of scrolling it off the top.
         if (first > 0 && list is android.widget.ListView) {
             (list as android.widget.ListView).setSelectionFromTop(first, (64 * resources.displayMetrics.density).toInt())
+        }
+    }
+
+    private val metroList get() = metro && !grid
+
+    /** The title becomes an outlined search box with a magnifier, as in tile-style app lists. */
+    private fun searchBox() {
+        val d = resources.displayMetrics.density
+        queryView.apply {
+            textSize = 17f
+            typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setStroke((2 * d).toInt(), getColor(R.color.dim)); setColor(0x22000000)
+            }
+            setPadding((12 * d).toInt(), (9 * d).toInt(), (12 * d).toInt(), (9 * d).toInt())
+            (layoutParams as ViewGroup.MarginLayoutParams).setMargins((12 * d).toInt(), (10 * d).toInt(), (12 * d).toInt(), (6 * d).toInt())
+            setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_search, 0)
+            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.dim))
         }
     }
 
@@ -197,13 +223,7 @@ class AppsActivity : BaseActivity() {
             val item = rows[pos]
             if (item is String) {   // letter header
                 val h = convert ?: layoutInflater.inflate(R.layout.item_letter, parent, false)
-                h.findViewById<TextView>(R.id.label).apply {
-                    text = item
-                    background = android.graphics.drawable.GradientDrawable().apply {
-                        setStroke((2 * resources.displayMetrics.density).toInt(), Metro.accent(context))
-                    }
-                    setTextColor(Metro.accent(context))
-                }
+                h.findViewById<TextView>(R.id.label).text = item.uppercase()
                 return h
             }
             val v = convert ?: layoutInflater.inflate(

@@ -42,6 +42,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Zoom") -> R.drawable.s_zoom
             title.startsWith("Icon pack") -> R.drawable.s_grid
             title.startsWith("Icon style") -> R.drawable.s_shape
+            title.startsWith("Tile colours") -> R.drawable.s_palette
             title.startsWith("Reset") -> R.drawable.s_refresh
             title.startsWith("Key tester") -> R.drawable.s_keyboard
             title.contains("default launcher") -> R.drawable.s_home
@@ -127,6 +128,9 @@ class SettingsActivity : BaseActivity() {
         Row("Icon style", { Icons.STYLES[Icons.style(this)] }) {
             Ui.choose(this, "Icon style", Icons.STYLES.mapIndexed { i, s ->
                 s to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Icons.clear(); refresh() } })
+        },
+        Row("Tile colours (Metro)", { if (Metro.appColours(this)) "Each app's own colour" else "Accent colour" }) {
+            Prefs.setBool(this, Prefs.TILE_COLOURS, !Metro.appColours(this)); Icons.clear(); refresh()
         },
         // Shortcuts
         *Prefs.DPAD.map { (pref, name) ->

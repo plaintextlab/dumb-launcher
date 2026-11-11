@@ -116,6 +116,10 @@ object Apps {
     /** The Clock app. Its alarm screen needs SET_ALARM, so open its normal launcher entry. */
     fun clock(c: Context): String? = resolve(c, Intent(AlarmClock.ACTION_SHOW_ALARMS))
 
+    /** The Calendar app. */
+    fun calendar(c: Context): String? =
+        resolve(c, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR))
+
     /** Resolve an intent to the launcher component of the app that handles it. */
     private fun resolve(c: Context, i: Intent): String? {
         val pm = c.packageManager

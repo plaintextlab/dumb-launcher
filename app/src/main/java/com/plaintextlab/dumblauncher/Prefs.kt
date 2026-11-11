@@ -22,6 +22,7 @@ object Prefs {
     const val DRAWER_BG = "drawer_bg"
     const val SHOW_MUSIC = "show_music"
     const val SHOW_CLOCK = "show_clock"
+    const val TILE_COLOURS = "tile_colours"   // true = each app's own colour, false = accent
     const val SHOW_DOCK = "show_dock"
     const val DRAWER_GRID = "drawer_grid"
 

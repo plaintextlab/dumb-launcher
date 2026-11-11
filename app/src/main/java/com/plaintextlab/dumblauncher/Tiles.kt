@@ -117,5 +117,24 @@ object Tiles {
             (Color.blue(c) + (t - Color.blue(c)) * k).toInt())
     }
 
+    /**
+     * The app's own colour for a flat tile: its icon background if that is a real colour,
+     * else the artwork's main colour. Null for white / grey icons (the caller uses the accent).
+     * Very light colours are darkened so a white glyph still reads on them.
+     */
+    fun appColour(icon: Drawable, size: Int = 48): Int? {
+        val adaptive = icon as? AdaptiveIconDrawable
+        val bg = adaptive?.background?.let { mainColour(pixels(it, size, true)) }?.takeUnless { isNearWhite(it) || isGrey(it) }
+        val c = bg ?: mainColour(pixels(adaptive?.foreground ?: icon, size, adaptive != null)).takeUnless { isNearWhite(it) || isGrey(it) }
+            ?: return null
+        val lum = (0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c)) / 255
+        return if (lum > 0.62) shade(c, -((lum - 0.62) * 1.6).toFloat().coerceAtMost(0.45f)) else c
+    }
+
+    private fun isGrey(c: Int): Boolean {
+        val hsv = FloatArray(3); Color.colorToHSV(c, hsv)
+        return hsv[1] < 0.18f
+    }
+
     fun isNearWhite(c: Int) = Color.red(c) > 230 && Color.green(c) > 230 && Color.blue(c) > 230
 }

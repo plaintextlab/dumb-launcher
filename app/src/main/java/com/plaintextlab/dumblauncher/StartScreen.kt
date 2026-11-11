@@ -3,7 +3,9 @@ package com.plaintextlab.dumblauncher
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -14,52 +16,89 @@ import android.widget.TextClock
 import android.widget.TextView
 
 /**
- * Home in the Metro style: a column of flat tiles on a 4-unit grid.
- * - a wide live clock tile (flips between time and date),
+ * Home in the Metro style: a mosaic of flat tiles on a grid six small squares wide.
+ * A medium tile is 2x2 squares (three across), a small tile one square (four of them pack
+ * into one medium cell), a wide tile 4x2.
+ *
+ * - see-through live tiles for the clock and the date (the date tile flips now and then),
  * - a wide now-playing tile while music plays,
- * - medium tiles for number keys 1-4, small tiles for 5-9, 0 and the four arrow keys,
- * - counts in the corner of a tile (missed calls on Phone, unread on Messages, others'
- *   notifications), and "all apps" at the bottom.
- * Each tile shows which key opens it, so the keys stay the way you use it.
+ * - medium tiles for number keys 1-4, small tiles for 5-9, 0 and the arrow keys,
+ * - each tile in its app's own colour, with a round badge for missed calls, unread
+ *   messages and other notifications; a small key number shows which key opens it.
  */
 class StartScreen(private val a: Activity, private val column: LinearLayout, private val onOpen: (Int) -> Unit) {
 
-    /** Called with a tile's key: digit 0-9, or -1..-4 for the arrows (up, down, left, right). */
-    data class Tile(val key: Int, val entry: AppEntry, val size: Size, val tag: String)
-    enum class Size { SMALL, MEDIUM, WIDE }
+    data class Tile(val key: Int, val entry: AppEntry, val small: Boolean, val tag: String)
 
     private val dp = a.resources.displayMetrics.density
-    private val gap = (6 * dp).toInt()
-    private var unit = 0
-    private var clockFace = 0
-    private var clockTile: FrameLayout? = null
+    private val gap = (4 * dp).toInt()
+    private var u = 0                   // one small square
+    private val medium get() = 2 * u + gap
+    private var dateFace = 0
+    private var dateTile: FrameLayout? = null
     private var musicTile: FrameLayout? = null
 
     /** The rows, top to bottom (for the turnstile). */
     val rows = mutableListOf<View>()
 
+    private sealed class Cell { abstract val span: Int }
+    private class One(val view: View) : Cell() { override val span = 1 }
+    private class Two(val view: View) : Cell() { override val span = 2 }
+
     fun build(counts: Map<String, Int>, animate: Boolean = true) {
         column.removeAllViews(); rows.clear()
-        val width = a.resources.displayMetrics.widthPixels - (16 * dp).toInt()
-        unit = (width - 3 * gap) / 4
-        val accent = Metro.accent(a)
+        val width = a.resources.displayMetrics.widthPixels - column.paddingLeft - column.paddingRight
+        u = (width - 5 * gap) / 6
 
-        clockTile = wide(accent).also { addRow(it); fillClock(it) }
-        musicTile = wide(accent).also { addRow(it); it.visibility = View.GONE }
-
+        val cells = mutableListOf<Cell>()
+        cells += One(clockTile())
+        cells += One(dateTile().also { dateTile = it })
         val tiles = tiles()
-        val medium = tiles.filter { it.size == Size.MEDIUM }
-        val small = tiles.filter { it.size == Size.SMALL }
-        medium.chunked(2).forEach { pair -> addRow(row(pair.map { tile(it, accent, counts) })) }
-        small.chunked(4).forEach { four -> addRow(row(four.map { tile(it, accent, counts) })) }
+        val mediums = tiles.filter { !it.small }
+        val smalls = tiles.filter { it.small }
+        // Interleave like a real Start screen: a medium, a block of four smalls, a medium...
+        val blocks = smalls.chunked(4).map { block -> One(smallBlock(block.map { tile(it, counts) })) }
+        mediums.firstOrNull()?.let { cells += One(tile(it, counts)) }
+        cells += Two(musicTileView().also { musicTile = it })
+        var b = 0
+        for (m in mediums.drop(1)) {
+            cells += One(tile(m, counts))
+            if (b < blocks.size && cells.size % 2 == 0) cells += blocks[b++]
+        }
+        while (b < blocks.size) cells += blocks[b++]
+        pack(cells)
 
         addRow(TextView(a).apply {
             text = "all apps  ›"; textSize = 18f; setTextColor(a.getColor(R.color.fg))
             typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
-            gravity = Gravity.END; setPadding(0, (10 * dp).toInt(), (4 * dp).toInt(), (16 * dp).toInt())
+            gravity = Gravity.END; setPadding(0, (10 * dp).toInt(), (6 * dp).toInt(), (20 * dp).toInt())
             setOnClickListener { onOpen(ALL_APPS) }
-        })
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         if (animate) Turnstile.featherIn(column) else column.layoutAnimation = null
+    }
+
+    /** Lay cells into rows three medium cells wide; a wide cell that won't fit starts a new row. */
+    private fun pack(cells: List<Cell>) {
+        var row = newRow(); var used = 0
+        for (c in cells) {
+            if (c is Two && c.view.visibility == View.GONE) {   // hidden wide tile: its own (empty) row
+                addRow(c.view, LinearLayout.LayoutParams(2 * medium + gap, medium)); continue
+            }
+            if (used + c.span > 3) { addRow(row, rowParams()); row = newRow(); used = 0 }
+            val v = when (c) { is One -> c.view; is Two -> c.view }
+            val w = if (c.span == 2) 2 * medium + gap else medium
+            row.addView(v, LinearLayout.LayoutParams(w, medium).apply { if (used > 0) leftMargin = gap })
+            used += c.span
+        }
+        if (used > 0) addRow(row, rowParams())
+    }
+
+    private fun newRow() = LinearLayout(a).apply { orientation = LinearLayout.HORIZONTAL }
+    private fun rowParams() = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+    private fun addRow(v: View, lp: LinearLayout.LayoutParams) {
+        lp.bottomMargin = gap
+        column.addView(v, lp); rows += v
     }
 
     /** Number keys 1-4 as medium tiles; 5-9, 0 and the arrows as small ones. Empty keys are left out. */
@@ -68,130 +107,144 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
         val dock = if (Dock.enabled(a)) Dock.slots(a).associate { it.key to it.entry } else emptyMap()
         for (n in listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)) {
             val e = dock[n] ?: Apps.entry(a, Prefs.get(a, Prefs.num(n))) ?: continue
-            out += Tile(n, e, if (n in 1..4) Size.MEDIUM else Size.SMALL, "$n")
+            out += Tile(n, e, small = n !in 1..4, tag = "$n")
         }
         Prefs.DPAD.forEachIndexed { i, (pref, _) ->
             val e = Apps.entry(a, Prefs.get(a, pref)) ?: return@forEachIndexed
-            out += Tile(-(i + 1), e, Size.SMALL, listOf("▲", "▼", "◀", "▶")[i])
+            out += Tile(-(i + 1), e, small = true, tag = listOf("▲", "▼", "◀", "▶")[i])
         }
         return out
     }
 
-    private fun addRow(v: View) {
-        // A tile added as its own row (the wide ones) keeps its size; other rows fill the width.
-        val own = v.layoutParams
-        val lp = if (own != null) LinearLayout.LayoutParams(own.width, own.height)
-                 else LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        lp.bottomMargin = gap
-        column.addView(v, lp); rows += v
-    }
-
-    private fun row(tiles: List<View>) = LinearLayout(a).apply {
-        orientation = LinearLayout.HORIZONTAL
-        tiles.forEachIndexed { i, t ->
-            addView(t, LinearLayout.LayoutParams(t.layoutParams.width, t.layoutParams.height).apply {
-                if (i > 0) leftMargin = gap
-            })
+    /** Four small tiles in one medium cell, 2x2. */
+    private fun smallBlock(tiles: List<View>) = LinearLayout(a).apply {
+        orientation = LinearLayout.VERTICAL
+        tiles.chunked(2).forEachIndexed { r, pair ->
+            addView(LinearLayout(a).apply {
+                orientation = LinearLayout.HORIZONTAL
+                pair.forEachIndexed { i, t -> addView(t, LinearLayout.LayoutParams(u, u).apply { if (i > 0) leftMargin = gap }) }
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, u).apply { if (r > 0) topMargin = gap })
         }
     }
 
-    private fun box(w: Int, h: Int, accent: Int) = FrameLayout(a).apply {
-        layoutParams = ViewGroup.LayoutParams(w, h)
-        background = ColorDrawable(accent)
+    private fun box(colour: Int) = FrameLayout(a).apply {
+        background = ColorDrawable(colour)
         Turnstile.tilt(this)
     }
 
-    private fun wide(accent: Int) = box(4 * unit + 3 * gap, 2 * unit + gap, accent)
+    /** See-through tiles let the wallpaper show, like transparent live tiles. */
+    private val glass = 0x38FFFFFF
 
-    private fun tile(t: Tile, accent: Int, counts: Map<String, Int>): View {
-        val side = if (t.size == Size.MEDIUM) 2 * unit + gap else unit
-        val v = box(side, side, accent)
+    private fun tile(t: Tile, counts: Map<String, Int>): View {
+        val side = if (t.small) u else medium
+        val v = box(Metro.accent(a))
         val glyph = ImageView(a).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
-        Icons.load(a, t.entry) { d, _ -> glyph.setImageDrawable(d) }
-        val g = if (t.size == Size.MEDIUM) (side * 0.8f).toInt() else side
-        v.addView(glyph, FrameLayout.LayoutParams(g, g, Gravity.CENTER))
-        if (t.size == Size.MEDIUM) v.addView(text(t.entry.label, 13f), corner(Gravity.BOTTOM or Gravity.START))
-        v.addView(text(t.tag, 11f).apply { alpha = 0.8f }, corner(Gravity.TOP or Gravity.END))
-        val pkg = Shortcuts.packageOf(t.entry.target)
-        counts[pkg]?.takeIf { it > 0 }?.let { n ->
-            v.addView(text("$n", if (t.size == Size.MEDIUM) 22f else 15f), corner(Gravity.BOTTOM or Gravity.END))
+        Icons.load(a, t.entry) { d, _ ->
+            glyph.setImageDrawable(d)
+            // The tile takes the colour of the icon's own square, so the glyph sits seamlessly.
+            (d as? BitmapDrawable)?.bitmap?.let { bmp -> v.background = ColorDrawable(bmp.getPixel(1, 1)) }
         }
+        val g = if (t.small) side else (side * 0.82f).toInt()
+        v.addView(glyph, FrameLayout.LayoutParams(g, g, Gravity.CENTER))
+        if (!t.small) v.addView(text(t.entry.label, 13f), corner(Gravity.BOTTOM or Gravity.START))
+        v.addView(text(t.tag, 10f).apply { alpha = 0.7f }, corner(Gravity.TOP or Gravity.START, tight = t.small))
+        counts[Shortcuts.packageOf(t.entry.target)]?.takeIf { it > 0 }?.let { n -> v.addView(badge(n, t.small), badgeParams(t.small)) }
         v.contentDescription = t.entry.label
         v.setOnClickListener { onOpen(t.key) }
         return v
     }
 
+    /** A round dark badge with the count, in the bottom-right corner. */
+    private fun badge(n: Int, small: Boolean) = TextView(a).apply {
+        text = if (n > 99) "99+" else "$n"
+        textSize = if (small) 12f else 17f
+        setTextColor(Color.WHITE); gravity = Gravity.CENTER
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        val d = ((if (small) 22 else 32) * dp).toInt()
+        minWidth = d; minHeight = d
+        setPadding((4 * dp).toInt(), 0, (4 * dp).toInt(), 0)
+        background = GradientDrawable().apply { setColor(0xE6202020.toInt()); cornerRadius = d / 2f }
+    }
+
+    private fun badgeParams(small: Boolean) = FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.END
+    ).apply { val m = ((if (small) 2 else 6) * dp).toInt(); setMargins(m, m, m, m) }
+
     private fun text(s: String, size: Float) = TextView(a).apply {
         text = s; textSize = size; setTextColor(Color.WHITE); maxLines = 1
         ellipsize = android.text.TextUtils.TruncateAt.END
-        typeface = Typeface.create(if (size >= 20f) "sans-serif-light" else "sans-serif", Typeface.NORMAL)
+        typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        setShadowLayer(4f, 0f, 1f, 0x66000000)
     }
 
-    private fun corner(gravity: Int) = FrameLayout.LayoutParams(
+    private fun corner(gravity: Int, tight: Boolean = false) = FrameLayout.LayoutParams(
         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, gravity
-    ).apply { val m = (7 * dp).toInt(); setMargins(m, (4 * dp).toInt(), m, (5 * dp).toInt()) }
+    ).apply { val m = ((if (tight) 3 else 8) * dp).toInt(); setMargins(m, ((if (tight) 1 else 4) * dp).toInt(), m, (6 * dp).toInt()) }
 
     // ---- Live tiles ----
 
-    private fun fillClock(t: FrameLayout) {
+    private fun clockTile() = box(glass).apply {
+        addView(TextClock(a).apply {
+            format12Hour = "h:mm"; format24Hour = "HH:mm"; textSize = 30f; setTextColor(Color.WHITE)
+            typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        }, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        addView(text("Clock", 13f), corner(Gravity.BOTTOM or Gravity.START))
+        setOnClickListener { onOpen(CLOCK) }
+    }
+
+    private fun dateTile() = box(glass).also { fillDate(it); it.setOnClickListener { onOpen(CALENDAR) } }
+
+    private fun fillDate(t: FrameLayout) {
         t.removeAllViews()
-        val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL }
-        if (clockFace == 0) {
-            col.addView(TextClock(a).apply {
-                format12Hour = "h:mm"; format24Hour = "HH:mm"; textSize = 46f; setTextColor(Color.WHITE)
-                typeface = Typeface.create("sans-serif-light", Typeface.NORMAL); includeFontPadding = false
-            })
-            col.addView(TextClock(a).apply {
-                format12Hour = "EEEE, d MMMM"; format24Hour = "EEEE, d MMMM"; textSize = 14f; setTextColor(Color.WHITE)
-            })
-        } else {
-            col.addView(TextClock(a).apply {
-                format12Hour = "EEEE"; format24Hour = "EEEE"; textSize = 28f; setTextColor(Color.WHITE)
-                typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
-            })
-            col.addView(TextClock(a).apply {
-                format12Hour = "d MMMM yyyy"; format24Hour = "d MMMM yyyy"; textSize = 16f; setTextColor(Color.WHITE)
-            })
+        val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
+        fun clock(fmt: String, size: Float, light: Boolean) = TextClock(a).apply {
+            format12Hour = fmt; format24Hour = fmt; textSize = size; setTextColor(Color.WHITE)
+            typeface = Typeface.create(if (light) "sans-serif-light" else "sans-serif", Typeface.NORMAL)
+            gravity = Gravity.CENTER_HORIZONTAL; includeFontPadding = false
         }
-        t.addView(col, corner(Gravity.BOTTOM or Gravity.START).apply { setMargins((10 * dp).toInt(), 0, 0, (8 * dp).toInt()) })
-        t.setOnClickListener { onOpen(CLOCK) }
+        if (dateFace == 0) { col.addView(clock("EEEE", 14f, false)); col.addView(clock("d", 34f, true)) }
+        else { col.addView(clock("MMMM", 16f, false)); col.addView(clock("yyyy", 26f, true)) }
+        t.addView(col, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER_HORIZONTAL or Gravity.TOP).apply { topMargin = (12 * dp).toInt() })
+        t.addView(text("Calendar", 13f), corner(Gravity.BOTTOM or Gravity.START))
     }
 
     private var ticks = 0
 
-    /** Called every second while Home is showing: flips the clock tile now and then. */
+    /** Called every second while Home is showing: flips the date tile now and then. */
     fun tick() {
-        val t = clockTile ?: return
-        if (++ticks % 9 == 0) Turnstile.flip(t) { clockFace = 1 - clockFace; fillClock(t) }
+        val t = dateTile ?: return
+        if (++ticks % 8 == 0) Turnstile.flip(t) { dateFace = 1 - dateFace; fillDate(t) }
     }
+
+    private fun musicTileView() = box(glass).apply { visibility = View.GONE }
 
     /** Show or hide the now-playing tile. */
     fun music(now: Music.Now?) {
         val t = musicTile ?: return
-        if (now == null) { t.visibility = View.GONE; return }
-        if (t.visibility != View.VISIBLE || t.tag != now.key + now.playing) {
-            t.tag = now.key + now.playing
-            t.removeAllViews()
-            val h = t.layoutParams.height
-            val art = ImageView(a).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
-            if (now.art != null) art.setImageBitmap(now.art) else art.setImageResource(R.drawable.ic_music)
-            t.addView(art, FrameLayout.LayoutParams(h, h, Gravity.END))
-            val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL }
-            col.addView(text(if (now.playing) "now playing" else "paused", 12f).apply { alpha = 0.8f })
-            col.addView(text(now.title, 20f))
-            if (now.artist.isNotEmpty()) col.addView(text(now.artist, 13f))
-            t.addView(col, FrameLayout.LayoutParams(t.layoutParams.width - h - (16 * dp).toInt(),
-                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.START).apply {
-                setMargins((10 * dp).toInt(), 0, 0, (8 * dp).toInt())
-            })
-            t.setOnClickListener { onOpen(MUSIC) }
-            t.visibility = View.VISIBLE
-        }
+        if (now == null) { if (t.visibility != View.GONE) { t.visibility = View.GONE; t.tag = null }; return }
+        val key = now.key + now.playing
+        if (t.visibility == View.VISIBLE && t.tag == key) return
+        t.tag = key
+        t.removeAllViews()
+        val h = medium
+        val art = ImageView(a).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
+        if (now.art != null) art.setImageBitmap(now.art) else art.setImageResource(R.drawable.ic_music)
+        t.addView(art, FrameLayout.LayoutParams(h, h, Gravity.END))
+        val col = LinearLayout(a).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(text(if (now.playing) "Now playing" else "Paused", 12f).apply { alpha = 0.8f })
+        col.addView(text(now.title, 18f).apply { typeface = Typeface.create("sans-serif-light", Typeface.NORMAL) })
+        if (now.artist.isNotEmpty()) col.addView(text(now.artist, 13f))
+        t.addView(col, FrameLayout.LayoutParams(medium - (12 * dp).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.START).apply { setMargins((8 * dp).toInt(), 0, 0, (6 * dp).toInt()) })
+        t.setOnClickListener { onOpen(MUSIC) }
+        t.visibility = View.VISIBLE
     }
 
     companion object {
         const val ALL_APPS = 100
         const val CLOCK = 101
         const val MUSIC = 102
+        const val CALENDAR = 103
     }
 }

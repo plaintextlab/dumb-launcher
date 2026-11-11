@@ -93,6 +93,7 @@ class HomeActivity : BaseActivity() {
         StartScreen.ALL_APPS -> openDrawer()
         StartScreen.CLOCK -> leave { if (!Apps.launch(this, Apps.clock(this))) android.widget.Toast.makeText(this, "No clock app found", android.widget.Toast.LENGTH_SHORT).show() }
         StartScreen.MUSIC -> leave { Music.open(this) }
+        StartScreen.CALENDAR -> leave { if (!Apps.launch(this, Apps.calendar(this))) android.widget.Toast.makeText(this, "No calendar app found", android.widget.Toast.LENGTH_SHORT).show() }
         in 0..9 -> openNumber(key)
         else -> openShortcut(Prefs.DPAD[-key - 1].first)
     }

@@ -50,7 +50,7 @@ object Icons {
         if (style(c) == METRO) {
             // Every icon (picked, from a pack, or the app's own) becomes a flat accent tile.
             val src = picked(c, e) ?: IconPacks.current(c)?.iconFor(e.target) ?: e.icon ?: Apps.rawIcon(c, e.target) ?: return null
-            return BitmapDrawable(c.resources, Metro.tile(src, SIZE_PX, Metro.accent(c)))
+            return BitmapDrawable(c.resources, Metro.tile(src, SIZE_PX, Metro.colourFor(c, src)))
         }
         picked(c, e)?.let { return it }
         val pack = IconPacks.current(c)
