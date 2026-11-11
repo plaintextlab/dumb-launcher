@@ -3,13 +3,15 @@
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:orientation="vertical" android:gravity="center"
     android:clipChildren="false"
- android:paddingHorizontal="@dimen/space_xs" android:paddingVertical="@dimen/space_m">
+    android:paddingHorizontal="@dimen/space_xs"
+    android:paddingTop="18dp" android:paddingBottom="@dimen/space_m">
+    <!-- Top padding and the label gap leave room for the zoomed (1.2x) icon inside the highlight. -->
 
     <ImageView android:id="@+id/icon" android:layout_width="52dp" android:layout_height="52dp" />
 
     <TextView
         android:id="@+id/label"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_s" android:gravity="center"
+        android:layout_marginTop="@dimen/space_m" android:gravity="center"
         android:maxLines="1" android:ellipsize="end" android:textSize="13sp" />
 </LinearLayout>

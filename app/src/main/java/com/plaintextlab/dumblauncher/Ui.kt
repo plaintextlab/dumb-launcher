@@ -29,7 +29,7 @@ object Ui {
         a.startActivity(AppsActivity.pickIntent(a, prefKey, title))
     }
 
-    private const val ZOOM = 1.3f
+    private const val ZOOM = 1.2f
 
     /** Colour one row/cell: only the selected one gets the highlight and a zoomed icon. */
     fun paint(v: View, selected: Boolean, animate: Boolean = false) {
