@@ -94,8 +94,10 @@ The key is **not** in this repository. Add it once as repository secrets
 | `SIGNING_KEY_ALIAS` | key alias |
 | `SIGNING_KEY_PASSWORD` | key password |
 
-Then push a tag such as `v0.1.1` (bump `versionCode`/`versionName` in `app/build.gradle.kts` first).
-The **Release** workflow builds the signed APK and publishes a GitHub release with it attached.
+To release, bump `versionCode` and `versionName` in `app/build.gradle.kts` and push. The **Release**
+workflow notices the new version, builds the signed APK, creates the `v<version>` tag and publishes a
+GitHub release with the APK attached. Pushes that don't change the version do nothing.
+If the secrets were missing when a version was pushed, add them and re-run the workflow.
 
 Local signed builds: put the same four values (with `SIGNING_KEYSTORE=<path>`) in an untracked
 `keystore.properties`, then run `./gradlew assembleRelease`.
