@@ -80,3 +80,22 @@ Use the **Key tester** to check codes on another phone.
 ./gradlew assembleDebug          # APK at app/build/outputs/apk/debug/app-debug.apk
 ./gradlew lint testDebugUnitTest
 ```
+
+## Releasing
+
+Release APKs must always be signed with the same key, or Android refuses to install updates.
+The key is **not** in this repository. Add it once as repository secrets
+(Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `SIGNING_KEYSTORE_BASE64` | the keystore file, base64-encoded (`base64 -w0 release.keystore`) |
+| `SIGNING_STORE_PASSWORD` | keystore password |
+| `SIGNING_KEY_ALIAS` | key alias |
+| `SIGNING_KEY_PASSWORD` | key password |
+
+Then push a tag such as `v0.1.1` (bump `versionCode`/`versionName` in `app/build.gradle.kts` first).
+The **Release** workflow builds the signed APK and publishes a GitHub release with it attached.
+
+Local signed builds: put the same four values (with `SIGNING_KEYSTORE=<path>`) in an untracked
+`keystore.properties`, then run `./gradlew assembleRelease`.

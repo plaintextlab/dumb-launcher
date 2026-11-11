@@ -71,14 +71,9 @@
 
         <activity
             android:name=".KeyTesterActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/key_tester"
-            android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:screenOrientation="portrait" />
         <service
             android:name=".NotifListener"
             android:exported="true"
