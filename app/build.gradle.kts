@@ -13,8 +13,8 @@ android {
         applicationId = "com.plaintextlab.dumblauncher"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "0.3.0"
+        versionCode = 8
+        versionName = "0.4.0"
     }
     // Release signing: set SIGNING_KEYSTORE, SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS,
     // SIGNING_KEY_PASSWORD (CI secrets), or put the same keys in an untracked keystore.properties.
