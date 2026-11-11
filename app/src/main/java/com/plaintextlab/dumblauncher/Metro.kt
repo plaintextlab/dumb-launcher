@@ -1,7 +1,4 @@
-        // Keep the plate reading only if a real symbol is left (at least 8% of the plate).
-        val drawn = original.count { Color.alpha(it) > 200 }
-        if (plate == null || px.count { Color.alpha(it) > 128 } < drawn * 0.08f) {
-            original.copyInto(px)                          // no plate, or too little left on itpackage com.plaintextlab.dumblauncher
+package com.plaintextlab.dumblauncher
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -58,8 +55,10 @@ object Metro {
         val original = px.copyOf()
         val plate = if (mono == null) plateColour(px, size) else null
         if (plate != null) unplate(px, plate)              // symbol on its own disc / square
-        if (plate == null || px.count { Color.alpha(it) > 24 } < px.size / 100) {
-            original.copyInto(px)                          // no plate, or nothing left on it
+        // Keep the plate reading only if a real symbol is left (at least 8% of the drawn area).
+        val drawn = original.count { Color.alpha(it) > 200 }
+        if (plate == null || px.count { Color.alpha(it) > 128 } < drawn * 0.08f) {
+            original.copyInto(px)                          // no plate, or too little left on it
             whiten(px, keepShape = mono != null || mostlyWhite(px))
         }
         bmp.setPixels(px, 0, size, 0, 0, size, size)
