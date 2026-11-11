@@ -30,6 +30,7 @@ class AppsActivity : BaseActivity() {
 
     private lateinit var list: AbsListView
     private val grid get() = Prefs.getBool(this, Prefs.DRAWER_GRID, true)
+    private val metro get() = Icons.style(this) == Icons.METRO
     private lateinit var queryView: TextView
     private var all: List<AppEntry> = emptyList()
     private var shown: List<AppEntry> = emptyList()
@@ -65,7 +66,7 @@ class AppsActivity : BaseActivity() {
 
     private fun filter() {
         shown = all.filter { it.matches(query) }
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "All apps"
+        val title = (intent.getStringExtra(EXTRA_TITLE) ?: "apps").lowercase()
         queryView.text = if (query.isEmpty()) title else "$title  ·  $query  (${shown.size})"
         adapter.notifyDataSetChanged()
         list.requestFocus()
@@ -163,7 +164,8 @@ class AppsActivity : BaseActivity() {
         override fun getItem(pos: Int) = shown[pos]
         override fun getItemId(pos: Int) = pos.toLong()
         override fun getView(pos: Int, convert: View?, parent: ViewGroup): View {
-            val v = convert ?: layoutInflater.inflate(if (grid) R.layout.item_grid else R.layout.item_row, parent, false)
+            val v = convert ?: layoutInflater.inflate(
+                if (!grid) R.layout.item_row else if (metro) R.layout.item_tile else R.layout.item_grid, parent, false)
             val e = shown[pos]
             val iv = v.findViewById<ImageView>(R.id.icon)
             iv.tag = e.target

@@ -7,7 +7,7 @@
         <item name="android:alertDialogTheme">@style/Theme.Dumb.Dialog</item>
     </style>
 
-    <!-- Menus and pop-ups: dark, rounded, same type as the rest of the launcher. -->
+    <!-- Menus and pop-ups: dark and square, same type as the rest of the launcher. -->
     <style name="Theme.Dumb.Dialog" parent="android:Theme.Material.Dialog.Alert">
         <item name="android:windowBackground">@drawable/bg_dialog</item>
         <item name="android:colorBackground">@color/surface</item>
@@ -17,8 +17,8 @@
         <item name="android:windowTitleStyle">@style/DialogTitle</item>
     </style>
     <style name="DialogTitle" parent="android:TextAppearance.Material.DialogWindowTitle">
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textSize">24sp</item>
         <item name="android:textColor">@color/fg</item>
     </style>
 
@@ -27,10 +27,11 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:paddingHorizontal">@dimen/space_l</item>
-        <item name="android:paddingTop">@dimen/space_m</item>
-        <item name="android:paddingBottom">@dimen/space_s</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:paddingTop">@dimen/space_l</item>
+        <item name="android:paddingBottom">@dimen/space_m</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textSize">34sp</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:textColor">@color/fg</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>

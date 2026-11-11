@@ -9,12 +9,8 @@ import android.widget.AdapterView
 import android.widget.TextView
 
 object Ui {
-    val COLOURS = listOf(
-        "Yellow" to 0xFFFFC107.toInt(), "Orange" to 0xFFFF6D00.toInt(), "Red" to 0xFFE53935.toInt(),
-        "Pink" to 0xFFEC407A.toInt(), "Purple" to 0xFF8E24AA.toInt(), "Blue" to 0xFF1E88E5.toInt(),
-        "Cyan" to 0xFF00ACC1.toInt(), "Green" to 0xFF43A047.toInt(), "White" to 0xFFFFFFFF.toInt(),
-        "Grey" to 0xFF616161.toInt(),
-    )
+    /** Accent colours (Metro palette). The first is the default. */
+    val COLOURS = Metro.ACCENTS
 
     /** A D-pad navigable list dialog. */
     fun choose(a: Activity, title: String, items: List<Pair<String, () -> Any?>>) {
@@ -33,6 +29,13 @@ object Ui {
 
     /** Colour one row/cell: only the selected one gets the highlight and a zoomed icon. */
     fun paint(v: View, selected: Boolean, animate: Boolean = false) {
+        // Metro tile in the drawer: a white frame and a small lift instead of a coloured bar.
+        if (v is SquareLayout) {
+            v.outlined = selected
+            val s = if (selected && Prefs.getBool(v.context, Prefs.ZOOM, true)) 1.06f else 1f
+            Anim.zoom(v, s, animate)
+            return
+        }
         v.findViewById<View>(R.id.icon)?.let { icon ->
             val s = if (selected && Prefs.getBool(v.context, Prefs.ZOOM, true)) ZOOM else 1f
             Anim.zoom(icon, s, animate)
@@ -56,14 +59,9 @@ object Ui {
             if (selected) text else v.context.getColor(R.color.dim))
     }
 
-    /** The selection: a rounded tile in the highlight colour, inset a little from the edges. */
-    private fun highlight(v: View, colour: Int): android.graphics.drawable.Drawable {
-        val dp = v.resources.displayMetrics.density
-        val tile = android.graphics.drawable.GradientDrawable().apply {
-            setColor(colour); cornerRadius = 14 * dp
-        }
-        return android.graphics.drawable.InsetDrawable(tile, (4 * dp).toInt(), (2 * dp).toInt(), (4 * dp).toInt(), (2 * dp).toInt())
-    }
+    /** The selection: a flat, square bar in the accent colour, edge to edge. */
+    private fun highlight(@Suppress("UNUSED_PARAMETER") v: View, colour: Int): android.graphics.drawable.Drawable =
+        android.graphics.drawable.ColorDrawable(colour)
 
     /** Black text on light colours, white on dark ones. */
     private fun readableOn(c: Int): Int {

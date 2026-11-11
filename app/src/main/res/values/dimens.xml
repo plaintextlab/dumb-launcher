@@ -1,11 +1,11 @@
 <resources>
-    <!-- Spacing on a 4dp / 8dp grid, and one set of corner radii used everywhere. -->
+    <!-- Spacing on a 4dp / 8dp grid, and corners are square (Metro). -->
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_s">8dp</dimen>
     <dimen name="space_m">12dp</dimen>
     <dimen name="space_l">16dp</dimen>
     <dimen name="space_xl">24dp</dimen>
-    <dimen name="radius_s">12dp</dimen>
-    <dimen name="radius_m">16dp</dimen>
-    <dimen name="radius_l">22dp</dimen>
+    <dimen name="radius_s">0dp</dimen>
+    <dimen name="radius_m">0dp</dimen>
+    <dimen name="radius_l">0dp</dimen>
 </resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One Metro tile in the drawer grid: a square of accent colour, the app's white glyph in the
+     middle and its name in the bottom-left corner, inside the tile. -->
+<com.plaintextlab.dumblauncher.SquareLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="fitXY" android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:paddingHorizontal="6dp" android:paddingBottom="4dp"
+        android:maxLines="1" android:ellipsize="end"
+        android:textSize="12sp" android:textColor="#FFFFFF" />
+</com.plaintextlab.dumblauncher.SquareLayout>

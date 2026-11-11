@@ -18,10 +18,11 @@ import java.util.concurrent.ConcurrentHashMap
  * style draws only the foreground layer so there is no white box.
  */
 object Icons {
-    /** Stored as the index; Tiles is the default. */
-    val STYLES = listOf("Clean (no white box)", "Original", "Tiles (same shape and size)")
+    /** Stored as the index; Metro is the default. */
+    val STYLES = listOf("Clean (no white box)", "Original", "Glossy tiles", "Metro (flat accent tiles)")
     const val TILES = 2
-    fun style(c: Context) = Prefs.getInt(c, Prefs.ICON_STYLE, TILES)
+    const val METRO = 3
+    fun style(c: Context) = Prefs.getInt(c, Prefs.ICON_STYLE, METRO)
     private const val SIZE_PX = 144
     private object None
     private val cache = ConcurrentHashMap<String, Any>()   // Drawable, or None for "no icon"
@@ -46,10 +47,12 @@ object Icons {
 
     private fun resolve(c: Context, e: AppEntry): Drawable? {
         if (e.target == Prefs.SPECIAL_APPS) return e.icon
-        Prefs.get(c, Prefs.iconOverride(e.target))?.let { saved ->
-            val (pkg, name) = saved.split('|', limit = 2).let { it[0] to it.getOrElse(1) { "" } }
-            IconPacks.get(c, pkg)?.drawable(name)?.let { return it }
+        if (style(c) == METRO) {
+            // Every icon (picked, from a pack, or the app's own) becomes a flat accent tile.
+            val src = picked(c, e) ?: IconPacks.current(c)?.iconFor(e.target) ?: e.icon ?: Apps.rawIcon(c, e.target) ?: return null
+            return BitmapDrawable(c.resources, Metro.tile(src, SIZE_PX, Metro.accent(c)))
         }
+        picked(c, e)?.let { return it }
         val pack = IconPacks.current(c)
         pack?.iconFor(e.target)?.let { return it }
         val raw = e.icon ?: Apps.rawIcon(c, e.target) ?: return null
@@ -57,6 +60,13 @@ object Icons {
         pack?.restyle(raw, e.target, SIZE_PX)?.let { return BitmapDrawable(c.resources, it) }
         if (style(c) == TILES) return BitmapDrawable(c.resources, Tiles.render(raw, SIZE_PX))
         return system(c, raw)
+    }
+
+    /** The icon the user picked for this app, if any. */
+    private fun picked(c: Context, e: AppEntry): Drawable? {
+        val saved = Prefs.get(c, Prefs.iconOverride(e.target)) ?: return null
+        val (pkg, name) = saved.split('|', limit = 2).let { it[0] to it.getOrElse(1) { "" } }
+        return IconPacks.get(c, pkg)?.drawable(name)
     }
 
     private fun system(c: Context, icon: Drawable?): Drawable? {

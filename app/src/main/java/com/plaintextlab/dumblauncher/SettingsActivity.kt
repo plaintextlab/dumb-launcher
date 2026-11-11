@@ -37,7 +37,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Music") -> R.drawable.ic_music
             title.startsWith("Clock") -> R.drawable.s_clock
             title.contains("otification") -> R.drawable.s_bell
-            title.startsWith("Highlight") -> R.drawable.s_palette
+            title.startsWith("Accent") -> R.drawable.s_palette
             title.startsWith("Animations") -> R.drawable.s_motion
             title.startsWith("Zoom") -> R.drawable.s_zoom
             title.startsWith("Icon pack") -> R.drawable.s_grid
@@ -56,7 +56,7 @@ class SettingsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_apps)
-        findViewById<TextView>(R.id.query).text = "Settings"
+        findViewById<TextView>(R.id.query).text = "settings"
         findViewById<TextView>(R.id.hint).text = "● Change    ↩ Back"
         rows = buildRows()
         list = findViewById(R.id.list)
@@ -116,9 +116,9 @@ class SettingsActivity : BaseActivity() {
                 Toast.makeText(this, "This phone doesn't allow notification access", Toast.LENGTH_LONG).show()
             }
         },
-        Row("Highlight colour", { Ui.COLOURS.firstOrNull { it.second == Prefs.getInt(this, Prefs.HIGHLIGHT, Ui.COLOURS[0].second) }?.first ?: "" }) {
-            Ui.choose(this, "Highlight colour", Ui.COLOURS.map { (name, c) ->
-                name to { Prefs.setInt(this, Prefs.HIGHLIGHT, c); refresh() } })
+        Row("Accent colour", { Ui.COLOURS.firstOrNull { it.second == Prefs.getInt(this, Prefs.HIGHLIGHT, Ui.COLOURS[0].second) }?.first ?: "Custom" }) {
+            Ui.choose(this, "Accent colour", Ui.COLOURS.map { (name, c) ->
+                name to { Prefs.setInt(this, Prefs.HIGHLIGHT, c); Icons.clear(); refresh() } })
         },
         Row("Animations", { onOff(Prefs.ANIM, true) }) { toggle(Prefs.ANIM, true) },
         Row("Zoom selected icon", { onOff(Prefs.ZOOM, true) }) { toggle(Prefs.ZOOM, true) },
