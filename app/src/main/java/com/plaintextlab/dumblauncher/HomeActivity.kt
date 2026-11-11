@@ -137,10 +137,17 @@ class HomeActivity : BaseActivity() {
         }
     }
 
+    /** The D-pad cross hides while the music widget is showing, to leave room for the dock. */
+    private fun updateDpadVisibility() {
+        val show = Prefs.getBool(this, Prefs.SHOW_DPAD, true) && musicView.visibility != View.VISIBLE
+        val dpad = findViewById<View>(R.id.dpad)
+        val want = if (show) View.VISIBLE else View.GONE
+        if (dpad.visibility != want) dpad.visibility = want
+    }
+
     /** Fill the D-pad cross with each arrow's app icon (or a faint arrow if unset). */
     private fun refreshShortcuts() {
-        val dpad = findViewById<View>(R.id.dpad)
-        dpad.visibility = if (Prefs.getBool(this, Prefs.SHOW_DPAD, true)) View.VISIBLE else View.GONE
+        updateDpadVisibility()
         val arms = listOf(R.id.sc_up to "▲", R.id.sc_down to "▼", R.id.sc_left to "◀", R.id.sc_right to "▶")
         for ((i, arm) in arms.withIndex()) {
             val v = findViewById<View>(arm.first)
@@ -225,8 +232,9 @@ class HomeActivity : BaseActivity() {
 
     private fun refreshMusic() {
         val now = if (Prefs.getBool(this, Prefs.SHOW_MUSIC, true)) Music.now(this) else null
-        if (now == null) { musicView.visibility = View.GONE; return }
-        musicView.visibility = View.VISIBLE
+        musicView.visibility = if (now == null) View.GONE else View.VISIBLE
+        updateDpadVisibility()
+        if (now == null) return
         val art = findViewById<ImageView>(R.id.musicArt)
         if (now.art != null) art.setImageBitmap(now.art) else art.setImageResource(R.drawable.ic_music)
         findViewById<TextView>(R.id.musicTitle).text = now.title
