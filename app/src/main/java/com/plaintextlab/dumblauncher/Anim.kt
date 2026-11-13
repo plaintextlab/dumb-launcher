@@ -28,14 +28,14 @@ object Anim {
 
     /** Zoom the selected icon with a little bounce. */
     fun zoom(icon: View, scale: Float, animate: Boolean) {
-        icon.animate().cancel()
-        if (animate && on(icon.context)) {
-            icon.animate().scaleX(scale).scaleY(scale).setDuration(180)
-                .setInterpolator(if (scale > 1f) OvershootInterpolator(2.5f) else DecelerateInterpolator())
-                .start()
-        } else {
-            icon.scaleX = scale; icon.scaleY = scale
-        }
+        // Never cancel() here: on a drawer tile this is the same view the turnstile is swinging in
+        // (alpha 0 -> 1), and cancelling left tiles invisible until a scroll rebound them.
+        // Starting a scale animation only replaces a running scale animation, not alpha/rotation.
+        val go = animate && on(icon.context)
+        icon.animate().scaleX(scale).scaleY(scale).setStartDelay(0).setDuration(if (go) 180 else 0)
+            .setInterpolator(if (scale > 1f) OvershootInterpolator(2.5f) else DecelerateInterpolator())
+            .start()
+        if (!go) { icon.scaleX = scale; icon.scaleY = scale }
     }
 
     /** Fade the highlight colour in instead of snapping. */
