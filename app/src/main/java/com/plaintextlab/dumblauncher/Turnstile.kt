@@ -62,8 +62,8 @@ object Turnstile {
                 if (shown.isEmpty() && ++frames < 30) return true       // nothing laid out yet: wait
                 host.viewTreeObserver.removeOnPreDrawListener(this)
                 shown.forEach { v ->
+                    settle(v)
                     val delay = hinge(v)
-                    v.animate().cancel()
                     v.rotationY = IN_ANGLE; v.alpha = 0f
                     v.animate().rotationY(0f).alpha(1f)
                         .setDuration(IN_MS).setStartDelay(delay).setInterpolator(EXPO_OUT)
@@ -78,10 +78,12 @@ object Turnstile {
     fun out(views: List<View>, then: () -> Unit) {
         val shown = views.filter { onScreen(it) }
         if (shown.isEmpty() || !Anim.on(shown[0].context)) { then(); return }
+        // A tapped tile may still be easing back from its press (scaled, tilted). Cancelling that
+        // mid-way and moving the pivot to the screen edge left it shrunk off-centre, so settle it first.
+        shown.forEach { settle(it) }
         val delays = shown.map { hinge(it) }
         val last = delays.indices.maxByOrNull { delays[it] }!!
         shown.forEachIndexed { i, v ->
-            v.animate().cancel()
             val a = v.animate().rotationY(OUT_ANGLE).alpha(0f)
                 .setDuration(OUT_MS).setStartDelay(delays[i]).setInterpolator(EXPO_IN).withLayer()
             if (i == last) a.withEndAction { then() }
@@ -90,8 +92,12 @@ object Turnstile {
     }
 
     /** Put views back after [out] (when coming back to the screen). */
-    fun reset(views: List<View>) = views.forEach { v ->
-        v.animate().cancel(); v.rotationY = 0f; v.rotationX = 0f; v.alpha = 1f
+    fun reset(views: List<View>) = views.forEach { settle(it) }
+
+    /** Stop any animation and put every property the tile UI touches back to rest. */
+    private fun settle(v: View) {
+        v.animate().cancel()
+        v.rotationX = 0f; v.rotationY = 0f; v.scaleX = 1f; v.scaleY = 1f; v.alpha = 1f
     }
 
     /** Pressing a tile tilts it toward the finger and pushes it in slightly. */
