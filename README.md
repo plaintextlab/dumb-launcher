@@ -7,8 +7,8 @@ Everything works from the keys; touch is only a fallback.
 
 | Screen | Keys |
 |---|---|
-| **Start** (Metro style, the default): your own tiles: apps, Clock, Calendar, Weather, Photos, Music (album art with ⏮ ⏯ ⏭), People (contact photos, 3×3). Nothing is added or reordered on its own | ▲▼◀▶ select a tile · ● OK opens it · hold ● → tile menu (Move, Resize, Colour with previews, Opens… for live tiles, Unpin, Add a live tile, music controls, Launcher settings) · in Move: ◀▶ ▲▼ move, ● done · 1-9 → your number-key apps · 0 → All apps · touch: hold a tile and drag (the others slide out of the way), hold without moving for its menu · swipe left → All apps · swipe down → notifications · swipe up at the bottom → All apps |
-| **Home** (other icon styles): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK or 0 → All apps · 1-9 → your number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up or left → All apps, swipe down → notifications, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
+| **Start** (Windows Phone look, the default): your own tiles: apps, Clock, Calendar, Weather, Photos, Music (album art with ⏮ ⏯ ⏭; tap it for the music popup), People (contact photos, 3×3). Nothing is added or reordered on its own | ▲▼◀▶ select a tile · ● OK opens it · hold ● → tile menu (Move, Resize, Colour with previews, Opens… for live tiles, Unpin, Add a live tile, music controls, Launcher settings) · in Move: ◀▶ ▲▼ move, ● done · 1-9 → your number-key apps · 0 → All apps · touch: hold a tile and drag (the others slide out of the way), hold without moving for its menu · swipe left → All apps · swipe down → notifications · swipe up at the bottom → All apps |
+| **Home** (Android look): big clock at the top; icons with counts for missed calls, messages and other apps; earphone icon; music widget | ● OK or 0 → All apps · 1-9 → your number-key apps · ▲▼◀▶ → your 4 shortcut apps · 📞 → call log · hold ● → Settings · 👤 ✉ 📷 → Contacts, Messages, Camera (any screen) · touch: swipe up or left → All apps, swipe down → notifications, tap the clock → Clock app, tap a dock / D-pad icon → that app, tap the call or message icon → call log / Messages |
 | **All apps**: A–Z or most used first (hold ● → Sort, or Settings), grid or list | just type on the keypad to search (T9: 2-2-6 → Camera), or tap the search box for the touch keyboard · 지움 deletes a digit · ↩ clears the search · hold ● → options |
 | **Key tester** | shows the code of every key; press ↩ twice to exit |
 
@@ -22,6 +22,7 @@ The selected icon zooms in, Nokia style.
 |---|---|
 | Wallpaper from gallery | pick a picture → home screen, lock screen or both |
 | Wallpaper from system picker | the phone's own wallpaper chooser |
+| Look | **Windows Phone** (default: Start screen of tiles) / **Android** (big clock, icons, dock, arrow-key shortcuts). Settings show only the options for the chosen look |
 | Show wallpaper on | Home screen only · All launcher screens · Off (black) |
 | App drawer background | Blurred wallpaper · See-through wallpaper · Black |
 | Refresh blurred wallpaper | re-makes the blur after changing wallpaper outside the launcher |
@@ -30,17 +31,17 @@ The selected icon zooms in, Nokia style.
 | Clock on Home | On / Off |
 | Show arrow-key apps on Home | On / Off (D-pad cross of the ▲▼◀▶ app icons; hidden while the music widget shows) |
 | Show notifications on Home | On / Off |
-| Music widget on Home | On / Off. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · hold ▲ (or tap) open the player · Back hides it until the next song or until playback resumes |
+| Music widget on Home | On / Off. Now playing: cover, song, the player's icon and a progress bar. Tap it (or hold ▲) for the **music popup**: big cover, progress, ⏮ ⏯ ⏭; tap the cover to open the player. Hold ◀ previous · hold ▼ play/pause · hold ▶ next · Back hides it until the next song or until playback resumes. Works with any player that shows media controls (YouTube, YouTube Music, Spotify, Auxio, …) |
 | Tile colours (Metro) | Each app's own colour (default) / Accent colour |
 | Weather tile (Metro) | On / Off. Current temperature and today's range from Open-Meteo (free, no account), for your approximate location rounded to about 1 km; refreshed at most every 30 minutes; tap to update |
 | Weather units | °C / °F |
 | Photos tile (Metro) | On / Off. A wide tile cycling through your recent photos; tap to open the gallery |
-| Notification access | needed for other apps' icons and for song title / album art. Android Go may not allow it; calls, SMS and basic music controls work without it |
+| Notification access | needed for other apps' icons and for song title, album art and progress. Android Go may not allow it; calls, SMS and basic music controls work without it |
 | Accent colour | 15 flat colours (Cyan by default): the selection, and the tiles in the Metro style |
 | Animations | On / Off (screen transitions, drawer zoom/pop-in, list cascade, highlight fade) |
 | Zoom selected icon | On / Off (in the Metro grid the selected tile gets a white frame and lifts slightly) |
 | Icon pack | any installed ADW / Nova / Apex-format pack, or None. Apps the pack has no icon for are put on the pack's own backing shape (if the pack has one), so they still match |
-| Icon style | **Metro** (default: every app a flat square in the accent colour with a white glyph, same size; the drawer grid shows the name inside the tile) / Glossy tiles / Clean (no white box) / Original |
+| Icon style | Android look only: Clean (no white box) / Original / Glossy tiles. In the Windows Phone look every app is a flat square in the accent colour (or its own colour) with a white glyph |
 | Home ▲▼◀▶ shortcuts | pick an app for each |
 | Dock on Home (keys 1-5) | On / Off. Bottom row showing the apps on keys 1-5 |
 | Dock apps | per key: your own pick, or Automatic (your most-opened apps) |

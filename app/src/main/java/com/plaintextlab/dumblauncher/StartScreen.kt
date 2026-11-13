@@ -376,7 +376,8 @@ class StartScreen(private val a: Activity, private val column: LinearLayout, pri
 
     /** Now playing (or null): updates the Music tile when the song or play state changes. */
     fun music(now: Music.Now?) {
-        if (now?.key == music?.key && now?.playing == music?.playing) return
+        // Also when the cover arrives after the song (YouTube, links to covers): it is often a moment late.
+        if (now?.key == music?.key && now?.playing == music?.playing && now?.art === music?.art) return
         music = now; fillLive(StartTiles.MUSIC)
     }
 

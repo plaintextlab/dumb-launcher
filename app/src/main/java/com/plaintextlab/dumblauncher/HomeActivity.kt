@@ -26,14 +26,8 @@ class HomeActivity : BaseActivity() {
         setContentView(R.layout.activity_home)
         notifs = findViewById(R.id.notifs)
         findViewById<TextView>(R.id.hint).text = "● Apps    1-9 Shortcuts    0 Apps    hold ● Settings"
-        // The buttons also work by touch.
-        listOf(R.id.musicPrev, R.id.musicPlay, R.id.musicNext).forEach {
-            findViewById<View>(it).apply { isFocusable = false; isFocusableInTouchMode = false }
-        }
-        findViewById<View>(R.id.musicPrev).setOnClickListener { Music.previous(this); refreshMusicSoon() }
-        findViewById<View>(R.id.musicPlay).setOnClickListener { Music.playPause(this); refreshMusicSoon() }
-        findViewById<View>(R.id.musicNext).setOnClickListener { Music.next(this); refreshMusicSoon() }
-        findViewById<View>(R.id.music).setOnClickListener { Music.open(this) }
+        // Now playing: tap for the music popup (cover, ⏮ ⏯ ⏭; tap the cover for the player).
+        findViewById<View>(R.id.music).setOnClickListener { showMusicPopup() }
         // Touch: tap the clock for the Clock app, swipe up anywhere for All apps.
         findViewById<View>(R.id.clockBox).setOnClickListener {
             if (!Apps.launch(this, Apps.clock(this))) {
@@ -149,10 +143,10 @@ class HomeActivity : BaseActivity() {
                 Apps.start(this, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
-            StartTiles.MUSIC -> leave {
-                // The playing app if there is one, else the phone's music app.
-                if (shownMusic == null || !Music.open(this)) Apps.start(this,
-                    Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            // Something playing: the music popup. Nothing: the phone's music app.
+            StartTiles.MUSIC -> if (shownMusic != null) showMusicPopup() else leave {
+                Apps.start(this, Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
             else -> id.removePrefix(StartTiles.APP).let { t ->
                 if (Apps.entry(this, t) == null) toast("That app is not installed. Hold the tile to unpin it.")
@@ -324,7 +318,7 @@ class HomeActivity : BaseActivity() {
                 KeyEvent.KEYCODE_DPAD_LEFT -> { Music.previous(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> { Music.next(this); refreshMusicSoon(); return true }
                 KeyEvent.KEYCODE_DPAD_DOWN -> { Music.playPause(this); refreshMusicSoon(); return true }
-                KeyEvent.KEYCODE_DPAD_UP -> { Music.open(this); return true }
+                KeyEvent.KEYCODE_DPAD_UP -> { showMusicPopup(); return true }
             }
         }
         when {
@@ -462,13 +456,34 @@ class HomeActivity : BaseActivity() {
         updateDpadVisibility()
         if (now == null) return
         val art = findViewById<ImageView>(R.id.musicArt)
-        if (now.art != null) art.setImageBitmap(now.art) else art.setImageResource(R.drawable.ic_music)
+        if (now.art !== shownArt) {
+            shownArt = now.art
+            if (now.art != null) art.setImageBitmap(now.art) else art.setImageResource(R.drawable.ic_music)
+        }
         findViewById<TextView>(R.id.musicTitle).text = now.title
         findViewById<TextView>(R.id.musicArtist).apply {
-            text = now.artist; visibility = if (now.artist.isEmpty()) View.GONE else View.VISIBLE
+            // "Artist · Player", or just one of them.
+            val parts = listOf(now.artist, now.app).filter { it.isNotEmpty() }.distinct()
+            text = parts.joinToString("  ·  "); visibility = if (parts.isEmpty()) View.GONE else View.VISIBLE
         }
-        findViewById<ImageView>(R.id.musicPlay).setImageResource(if (now.playing) R.drawable.ic_pause else R.drawable.ic_play)
+        // A small pause mark while paused; nothing while it plays.
+        findViewById<View>(R.id.musicPlaying).visibility = if (now.playing) View.GONE else View.VISIBLE
+        findViewById<ImageView>(R.id.musicApp).apply {
+            if (now.pkg != shownPkg) { shownPkg = now.pkg; setImageDrawable(Music.appIcon(this@HomeActivity, now)) }
+            visibility = if (drawable == null) View.GONE else View.VISIBLE
+        }
+        findViewById<android.widget.ProgressBar>(R.id.musicProgress).apply {
+            progressTintList = android.content.res.ColorStateList.valueOf(Prefs.getInt(this@HomeActivity, Prefs.HIGHLIGHT, Ui.COLOURS[0].second))
+            val p = now.progress
+            visibility = if (p == null) View.GONE else View.VISIBLE
+            if (p != null) progress = (p * 1000).toInt()
+        }
     }
+
+    private var shownArt: android.graphics.Bitmap? = null
+    private var shownPkg: String? = null
+
+    private fun showMusicPopup() = MusicPopup.show(this) { refreshMusicSoon() }
 
     private fun options() = startActivity(Intent(this, SettingsActivity::class.java))
 }

@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Music widget on Home: album art, title/artist, prev / play-pause / next. -->
+<!-- Now playing on Home: album art, title / artist, the player's icon and how far into the song.
+     Tap (or ▲) for the music popup with the controls. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/music"
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:layout_marginHorizontal="@dimen/space_m" android:layout_marginTop="@dimen/space_l"
-    android:background="@drawable/bg_card" android:padding="@dimen/space_m"
+    android:background="@drawable/bg_card"
+    android:paddingHorizontal="@dimen/space_m" android:paddingTop="@dimen/space_m" android:paddingBottom="10dp"
+    android:clickable="true" android:focusable="false"
+    android:contentDescription="Now playing. Tap for music controls"
     android:orientation="vertical" android:visibility="gone">
 
     <LinearLayout
@@ -13,7 +17,7 @@
 
         <ImageView
             android:id="@+id/musicArt"
-            android:layout_width="52dp" android:layout_height="52dp"
+            android:layout_width="48dp" android:layout_height="48dp"
             android:background="@drawable/bg_art" android:clipToOutline="true"
             android:scaleType="centerCrop" android:importantForAccessibility="no" />
 
@@ -26,7 +30,7 @@
                 android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:maxLines="1" android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
-                android:textSize="16sp" android:textColor="@color/fg" />
+                android:textSize="15sp" android:textColor="@color/fg" />
 
             <TextView
                 android:id="@+id/musicArtist"
@@ -37,22 +41,24 @@
         </LinearLayout>
 
         <ImageView
-            android:id="@+id/musicPrev"
-            android:layout_width="40dp" android:layout_height="40dp"
-            android:src="@drawable/ic_prev"
-            android:focusable="false" android:contentDescription="Previous" />
+            android:id="@+id/musicPlaying"
+            android:layout_width="18dp" android:layout_height="18dp"
+            android:layout_marginStart="@dimen/space_s"
+            android:src="@drawable/ic_pause" android:alpha="0.7"
+            android:importantForAccessibility="no" />
 
         <ImageView
-            android:id="@+id/musicPlay"
-            android:layout_width="44dp" android:layout_height="44dp"
-            android:src="@drawable/ic_play"
-            android:focusable="false" android:contentDescription="Play or pause" />
-
-        <ImageView
-            android:id="@+id/musicNext"
-            android:layout_width="40dp" android:layout_height="40dp"
-            android:src="@drawable/ic_next"
-            android:focusable="false" android:contentDescription="Next" />
+            android:id="@+id/musicApp"
+            android:layout_width="26dp" android:layout_height="26dp"
+            android:layout_marginStart="@dimen/space_s"
+            android:scaleType="fitCenter" android:importantForAccessibility="no" />
     </LinearLayout>
 
+    <ProgressBar
+        android:id="@+id/musicProgress"
+        style="@android:style/Widget.Material.ProgressBar.Horizontal"
+        android:layout_width="match_parent" android:layout_height="3dp"
+        android:layout_marginTop="10dp"
+        android:max="1000" android:progress="0"
+        android:progressBackgroundTint="#33FFFFFF" />
 </LinearLayout>
