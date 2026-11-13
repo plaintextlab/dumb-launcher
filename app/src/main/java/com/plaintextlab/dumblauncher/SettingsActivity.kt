@@ -42,6 +42,7 @@ class SettingsActivity : BaseActivity() {
             title.startsWith("Zoom") -> R.drawable.s_zoom
             title.startsWith("Icon pack") -> R.drawable.s_grid
             title.startsWith("Icon style") -> R.drawable.s_shape
+            title == "Look" -> R.drawable.s_home
             title.startsWith("Tile colours") -> R.drawable.s_palette
             title.startsWith("Weather") -> R.drawable.w_partly
             title.startsWith("Photos") -> R.drawable.s_image
@@ -65,7 +66,9 @@ class SettingsActivity : BaseActivity() {
         // classic Home settings (arrow shortcuts, big clock, dock, music widget) don't apply: hide them.
         val classicOnly = listOf("Show arrow-key", "Clock on Home", "Dock on Home", "Dock apps", "Music widget on Home")
         rows = buildRows().filterNot { r ->
-            Metro.on(this) && (classicOnly.any { r.title.startsWith(it) } || (r.title.startsWith("Home ") && r.title.endsWith(" shortcut")))
+            if (Metro.on(this)) classicOnly.any { r.title.startsWith(it) } || r.title.startsWith("Icon style") ||
+                (r.title.startsWith("Home ") && r.title.endsWith(" shortcut"))
+            else r.title.endsWith("(Metro)")   // tile-only settings
         }
         list = findViewById(R.id.list)
         list.adapter = adapter
@@ -81,6 +84,17 @@ class SettingsActivity : BaseActivity() {
 
     private fun refresh() = adapter.notifyDataSetChanged()
 
+    /** Switch between the Android and Windows Phone looks; settings reopen to show the rows for that look. */
+    private fun setLook(metro: Boolean) {
+        if (metro == Metro.on(this)) return
+        if (!metro) Prefs.setInt(this, Prefs.ICON_STYLE, Prefs.getInt(this, Prefs.CLASSIC_STYLE, 0))
+        else {
+            Prefs.setInt(this, Prefs.CLASSIC_STYLE, Icons.style(this))
+            Prefs.setInt(this, Prefs.ICON_STYLE, Icons.METRO)
+        }
+        Icons.clear(); Look.apply(this, false); recreate()
+    }
+
     private fun onOff(key: String, def: Boolean) = if (Prefs.getBool(this, key, def)) "On" else "Off"
 
     private fun toggle(key: String, def: Boolean) {
@@ -88,6 +102,13 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun buildRows() = listOf(
+        // The whole look: classic Android home with a clock and icons, or a Windows Phone Start screen of tiles.
+        Row("Look", { if (Metro.on(this)) "Windows Phone (tiles)" else "Android (clock and icons)" }) {
+            Ui.choose(this, "Look", listOf(
+                "Android (clock and icons)" to { setLook(metro = false) },
+                "Windows Phone (tiles)" to { setLook(metro = true) },
+            ))
+        },
         // Wallpaper
         Row("Wallpaper from gallery", action = {
             val i = Intent(Intent.ACTION_GET_CONTENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE)
@@ -136,8 +157,9 @@ class SettingsActivity : BaseActivity() {
         // Icons
         Row("Icon pack", { IconPacks.current(this)?.label ?: "None" }) { Icons.choosePack(this) { refresh() } },
         Row("Icon style", { Icons.STYLES[Icons.style(this)] }) {
-            Ui.choose(this, "Icon style", Icons.STYLES.mapIndexed { i, s ->
-                s to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Icons.clear(); refresh() } })
+            // Android look only: the Metro style is the Windows Phone look, chosen under Look.
+            Ui.choose(this, "Icon style", Icons.STYLES.mapIndexed { i, s -> i to s }.filter { it.first != Icons.METRO }.map { (i, s) ->
+                s to { Prefs.setInt(this, Prefs.ICON_STYLE, i); Prefs.setInt(this, Prefs.CLASSIC_STYLE, i); Icons.clear(); refresh() } })
         },
         Row("Tile colours (Metro)", { if (Metro.appColours(this)) "Each app's own colour" else "Accent colour" }) {
             Prefs.setBool(this, Prefs.TILE_COLOURS, !Metro.appColours(this)); Icons.clear(); refresh()

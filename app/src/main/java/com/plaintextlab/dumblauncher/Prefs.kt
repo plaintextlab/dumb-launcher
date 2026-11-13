@@ -11,6 +11,8 @@ object Prefs {
     const val SPECIAL_APPS = "special:apps"
     const val HIGHLIGHT = "highlight"
     const val ICON_STYLE = "icon_style"
+    /** The icon style to go back to when switching from the Windows Phone look to the Android look. */
+    const val CLASSIC_STYLE = "classic_style"
     const val ICON_PACK = "icon_pack"
     const val WALL_MODE = "wall_mode"
     const val WALL_DIM = "wall_dim"
