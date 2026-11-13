@@ -379,7 +379,8 @@ class AppsActivity : BaseActivity() {
             Icons.load(this@AppsActivity, e) { d, instant ->
                 if (iv.tag != e.target) return@load   // this cell was reused for another app meanwhile
                 iv.setImageDrawable(d)
-                if (!instant && Anim.on(iv.context)) { iv.alpha = 0f; iv.animate().alpha(1f).setDuration(150).start() }
+                if (!instant && Anim.on(iv.context)) { iv.alpha = 0f; iv.animate().alpha(1f).setStartDelay(0).setDuration(150).start() }
+                else iv.alpha = 1f   // a reused cell may still be mid-fade from its last app
             }
             v.findViewById<TextView>(R.id.label).text = e.label
             Ui.paint(v, pos == list.selectedItemPosition)

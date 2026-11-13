@@ -28,13 +28,16 @@ object Anim {
 
     /** Zoom the selected icon with a little bounce. */
     fun zoom(icon: View, scale: Float, animate: Boolean) {
-        icon.animate().cancel()
+        // Never cancel() here: that also kills a fade or turnstile running on the same view and
+        // leaves it invisible. Starting a scale animation only replaces an earlier scale animation.
         if (animate && on(icon.context)) {
-            icon.animate().scaleX(scale).scaleY(scale).setDuration(180)
+            icon.animate().scaleX(scale).scaleY(scale).setStartDelay(0).setDuration(180)
                 .setInterpolator(if (scale > 1f) OvershootInterpolator(2.5f) else DecelerateInterpolator())
                 .start()
         } else {
             icon.scaleX = scale; icon.scaleY = scale
+            // Stop an earlier zoom from carrying on past the size just set.
+            icon.animate().scaleX(scale).scaleY(scale).setStartDelay(0).setDuration(0).start()
         }
     }
 
